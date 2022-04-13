@@ -10,6 +10,11 @@
 #if defined(IMGUI_IMPL_OPENGL_ES2)
 #include <GLES2/gl2.h>
 #endif
+
+// 自分のユーティリティ
+#include "util.h"
+#include <pylon/PylonIncludes.h>
+
 #include <GLFW/glfw3.h> // Will drag system OpenGL headers
 
 // [Win32] Our example includes a copy of glfw3.lib pre-compiled with VS2010 to maximize ease of testing and compatibility with old VS compilers.
@@ -55,7 +60,7 @@ int main(int, char**)
 #endif
 
     // Create window with graphics context
-    GLFWwindow* window = glfwCreateWindow(1280, 720, "Dear ImGui GLFW+OpenGL3 example", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(1280, 720, "grab UI v2", NULL, NULL);
     if (window == NULL)
         return 1;
     glfwMakeContextCurrent(window);
@@ -90,43 +95,115 @@ int main(int, char**)
     //io.Fonts->AddFontFromFileTTF("../../misc/fonts/ProggyTiny.ttf", 10.0f);
     //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
     //IM_ASSERT(font != NULL);
-    ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\meiryo.ttc", 36.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
+    ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\meiryo.ttc", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
     IM_ASSERT(font != NULL);
 
     // Our state
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
-    // Main loop
-    while (!glfwWindowShouldClose(window))
+    // 直下の data ディレクトリへ移動
+    moveToDir("data");
+    string currentDirPath;
+    currentDirPath = _getcwd(NULL, 0);
+
+    // カメラの状態を確認
+    using namespace Pylon;
+    static const size_t c_maxCamerasToUse = 3;
+    PylonInitialize();
+    int exitCode = 0;
+
+    try
     {
-        // Poll and handle events (inputs, window resize, etc.)
-        // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
-        // - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application, or clear/overwrite your copy of the mouse data.
-        // - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application, or clear/overwrite your copy of the keyboard data.
-        // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
-        glfwPollEvents();
+        // Get the transport layer factory.
+        CTlFactory& tlFactory = CTlFactory::GetInstance();
 
-        // Start the Dear ImGui frame
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
+        // Get all attached devices and exit application if no device is found.
+        DeviceInfoList_t devices;
+        if (tlFactory.EnumerateDevices(devices) == 0)
+        {
+            throw RUNTIME_EXCEPTION("No camera present.");
+        }
 
-        // ここから自分のアプリ
+        // Create an array of instant cameras for the found devices and avoid exceeding a maximum number of devices.
+        CInstantCameraArray cameras(min(devices.size(), c_maxCamerasToUse));
+
+        // Create and attach all Pylon Devices.
+        for (size_t i = 0; i < cameras.GetSize(); ++i)
+        {
+            cameras[i].Attach(tlFactory.CreateDevice(devices[i]));
+
+            // Print the model name of the camera.
+            cout << "Using device " << cameras[i].GetDeviceInfo().GetModelName() << endl;
+        }
+
+        // Main loop
+        while (!glfwWindowShouldClose(window))
+        {
+            // Poll and handle events (inputs, window resize, etc.)
+            // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
+            // - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application, or clear/overwrite your copy of the mouse data.
+            // - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application, or clear/overwrite your copy of the keyboard data.
+            // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
+            glfwPollEvents();
+
+            // Start the Dear ImGui frame
+            ImGui_ImplOpenGL3_NewFrame();
+            ImGui_ImplGlfw_NewFrame();
+            ImGui::NewFrame();
+
+            // ここから自分のアプリ
+
+            // 上下のレイアウト
 
 
-        // ここまで
+            // 状況を表示
+            int w, h;
+            glfwGetWindowSize(window, &w, &h);
+            ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
+            ImGui::SetNextWindowSize(ImVec2(w - 0.0f, 0.0f));
+            ImGui::Begin("info", 0, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_AlwaysAutoResize);
+            {
+                ImGui::Text(currentDirPath.c_str());
 
-        // Rendering
-        ImGui::Render();
-        int display_w, display_h;
-        glfwGetFramebufferSize(window, &display_w, &display_h);
-        glViewport(0, 0, display_w, display_h);
-        glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
-        glClear(GL_COLOR_BUFFER_BIT);
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+                ImGui::Separator();
 
-        glfwSwapBuffers(window);
+                for (size_t i = 0; i < cameras.GetSize(); ++i)
+                {
+                    ImGui::Text(cameras[i].GetDeviceInfo().GetSerialNumber().c_str());
+                }
+            }
+            ImGui::End();
+
+            // 絵を表示
+
+
+
+            // ここまで
+
+            // Rendering
+            ImGui::Render();
+            int display_w, display_h;
+            glfwGetFramebufferSize(window, &display_w, &display_h);
+            glViewport(0, 0, display_w, display_h);
+            glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
+            glClear(GL_COLOR_BUFFER_BIT);
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+            glfwSwapBuffers(window);
+        }
+
+
+    } // Pylon try-exception
+    catch (const GenericException& e)
+    {
+        // Error handling
+        cerr << "An exception occurred." << endl
+            << e.GetDescription() << endl;
+        exitCode = 1;
     }
+
+    // Releases all pylon resources.
+    PylonTerminate();
 
     // Cleanup
     ImGui_ImplOpenGL3_Shutdown();
