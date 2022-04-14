@@ -7,6 +7,7 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include <stdio.h>
+
 #if defined(IMGUI_IMPL_OPENGL_ES2)
 #include <GLES2/gl2.h>
 #endif
@@ -14,7 +15,9 @@
 // 自分のユーティリティ
 #include "util.h"
 #include <pylon/PylonIncludes.h>
+#include <pylon/PylonGUI.h>
 
+#include <GL/gl3w.h>            // Initialize with gl3wInit()
 #include <GLFW/glfw3.h> // Will drag system OpenGL headers
 
 // [Win32] Our example includes a copy of glfw3.lib pre-compiled with VS2010 to maximize ease of testing and compatibility with old VS compilers.
@@ -28,6 +31,25 @@ static void glfw_error_callback(int error, const char* description)
 {
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
+
+// データをGPUへ展開
+//#include <GL/gl3w.h>
+ImTextureID uint8Gray2gltexture(GLuint& texture, int cols, int rows, uint8_t* data)
+{
+    //GLuint texture;
+    //glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+    //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.cols, image.rows, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.data);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, cols, rows, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, data);
+    //ImTextureID imtexture{ (ImTextureID)(intptr_t)texture };
+
+    return (ImTextureID)(intptr_t)texture;
+}
+
+
 
 int main(int, char**)
 {
@@ -81,6 +103,9 @@ int main(int, char**)
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
+    // Initialize OpenGL loader
+    bool err = gl3wInit() != 0;
+
     // Load Fonts
     // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
     // - AddFontFromFileTTF() will return the ImFont* so you can store it if you need to select the font among multiple.
@@ -103,14 +128,29 @@ int main(int, char**)
 
     // 直下の data ディレクトリへ移動
     moveToDir("data");
+    char* tmp;
     string currentDirPath;
-    currentDirPath = _getcwd(NULL, 0);
+    if ((tmp = _getcwd(NULL, 0)) != NULL) {
+        currentDirPath = tmp;
+    }
 
     // カメラの状態を確認
     using namespace Pylon;
     static const size_t c_maxCamerasToUse = 3;
+    
     PylonInitialize();
     int exitCode = 0;
+    // Number of images to be grabbed.
+    static const uint32_t c_countOfImagesToGrab = 10;
+
+    // GL
+    // テクスチャ
+    GLuint glTxArray[3];
+    glGenTextures(1, glTxArray);
+
+    // ImGui ImTextureID
+    ImTextureID imTxArray[3] = {(ImTextureID)0, (ImTextureID)0, (ImTextureID)0};
+    bool grabbed[3] = { false, false, false };
 
     try
     {
@@ -136,6 +176,11 @@ int main(int, char**)
             cout << "Using device " << cameras[i].GetDeviceInfo().GetModelName() << endl;
         }
 
+        // grab start
+        cameras.StartGrabbing();
+        // This smart pointer will receive the grab result data.
+        CGrabResultPtr ptrGrabResult;
+
         // Main loop
         while (!glfwWindowShouldClose(window))
         {
@@ -158,25 +203,66 @@ int main(int, char**)
 
             // 状況を表示
             int w, h;
+            float infoh;
             glfwGetWindowSize(window, &w, &h);
             ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
             ImGui::SetNextWindowSize(ImVec2(w - 0.0f, 0.0f));
             ImGui::Begin("info", 0, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_AlwaysAutoResize);
             {
+                // 保存先(=カレント)の表示
                 ImGui::Text(currentDirPath.c_str());
 
                 ImGui::Separator();
 
+                // カメラのシリアル番号を表示
                 for (size_t i = 0; i < cameras.GetSize(); ++i)
                 {
                     ImGui::Text(cameras[i].GetDeviceInfo().GetSerialNumber().c_str());
                 }
+                infoh = ImGui::GetWindowHeight();
             }
             ImGui::End();
 
             // 絵を表示
+            // Grab c_countOfImagesToGrab from the cameras.
+            for (uint32_t i = 0; i < c_countOfImagesToGrab && cameras.IsGrabbing(); ++i)
+            {
+                cameras.RetrieveResult(5000, ptrGrabResult, TimeoutHandling_ThrowException);
 
+                // Image grabbed successfully?
+                if (ptrGrabResult->GrabSucceeded())
+                {
+                    intptr_t cameraContextValue = ptrGrabResult->GetCameraContext();
+                    // DisplayImage(cameraContextValue, ptrGrabResult);
 
+                    // Print the index and the model name of the camera.
+                    cout << "Camera " << cameraContextValue << ": " << cameras[cameraContextValue].GetDeviceInfo().GetSerialNumber() << endl;
+                
+                    // result buffer から GL texture へ展開
+                    int col = ptrGrabResult->GetWidth();
+                    int row = ptrGrabResult->GetHeight();
+                    imTxArray[cameraContextValue] = uint8Gray2gltexture(glTxArray[i], col, row, (uint8_t*)ptrGrabResult->GetBuffer());
+                    grabbed[cameraContextValue] = true;
+                }
+            }
+
+            static bool imageFlag = grabbed[0] && grabbed[1] && grabbed[2];
+            
+            ImGui::SetNextWindowPos(ImVec2(0.0f, infoh));
+            ImGui::SetNextWindowSize(ImVec2(w - 0.0f, h-infoh));
+            ImGui::Begin("grab image", &imageFlag);
+            {
+                float childw = ImGui::GetContentRegionAvail().x / 3.0f;
+                for (int i = 0; i < 3; ++i) {
+                    ImGui::BeginChild(i, ImVec2(childw, childw));
+                    {
+                        ImGui::Image(imTxArray[i], ImVec2(childw, childw));
+                    }
+                    ImGui::EndChild();
+                    ImGui::SameLine();
+                }
+            }
+            ImGui::End();
 
             // ここまで
 
