@@ -12,13 +12,16 @@
 #include <GLES2/gl2.h>
 #endif
 
-// 自分のユーティリティ
-#include "util.h"
-#include <pylon/PylonIncludes.h>
-#include <pylon/PylonGUI.h>
-
 #include <GL/gl3w.h>            // Initialize with gl3wInit()
 #include <GLFW/glfw3.h> // Will drag system OpenGL headers
+
+// 自分のユーティリティ
+#include "util.h"
+#include "BufferedImage.h"
+
+#include <pylon/PylonIncludes.h>
+//#include <pylon/PylonGUI.h>
+
 
 // [Win32] Our example includes a copy of glfw3.lib pre-compiled with VS2010 to maximize ease of testing and compatibility with old VS compilers.
 // To link with VS2010-era libraries, VS2015+ requires linking with legacy_stdio_definitions.lib, which we do using this pragma.
@@ -141,18 +144,14 @@ int main(int, char**)
     PylonInitialize();
     int exitCode = 0;
     // Number of images to be grabbed.
-    static const uint32_t c_countOfImagesToGrab = 10;
+    static const uint32_t c_countOfImagesToGrab = 3;
 
     // GL
     // テクスチャ
-    GLuint glTxArray[3];
-    glGenTextures(1, glTxArray);
-
-    // ImGui ImTextureID
-    ImTextureID imTxArray[3] = {(ImTextureID)0, (ImTextureID)0, (ImTextureID)0};
-    bool grabbed[3] = { false, false, false };
-
-    try
+    BufferedImage imageBuf[3];
+    string winname[3] = { "a", "b", "c" };
+   
+        try
     {
         // Get the transport layer factory.
         CTlFactory& tlFactory = CTlFactory::GetInstance();
@@ -241,28 +240,38 @@ int main(int, char**)
                     // result buffer から GL texture へ展開
                     int col = ptrGrabResult->GetWidth();
                     int row = ptrGrabResult->GetHeight();
+                    imageBuf[cameraContextValue].CopyToGpu(col, row, 1, (unsigned char*)ptrGrabResult->GetBuffer());
+                    /*
                     imTxArray[cameraContextValue] = uint8Gray2gltexture(glTxArray[i], col, row, (uint8_t*)ptrGrabResult->GetBuffer());
                     grabbed[cameraContextValue] = true;
+                    */
+
                 }
             }
 
-            static bool imageFlag = grabbed[0] && grabbed[1] && grabbed[2];
+            //static bool imageFlag = grabbed[0] && grabbed[1] && grabbed[2];
             
-            ImGui::SetNextWindowPos(ImVec2(0.0f, infoh));
-            ImGui::SetNextWindowSize(ImVec2(w - 0.0f, h-infoh));
-            ImGui::Begin("grab image", &imageFlag);
+            //ImGui::SetNextWindowPos(ImVec2(0.0f, infoh));
+            //ImGui::SetNextWindowSize(ImVec2(w - 0.0f, h-infoh));
+            //ImGui::Begin("grab image"); // , & imageFlag);
             {
-                float childw = ImGui::GetContentRegionAvail().x / 3.0f;
+                float childw = (w - 0.0f) / 3.0f;//ImGui::GetContentRegionAvail().x / 3.0f;
+                float childx = 0.0f;
                 for (int i = 0; i < 3; ++i) {
-                    ImGui::BeginChild(i, ImVec2(childw, childw));
+                    //ImGui::SetNextWindowSize(ImVec2(childw, childw));
+                    ImGui::SetNextWindowPos(ImVec2(childx, infoh));
+                    ImGui::SetNextWindowSize(ImVec2(childw, childw));
+                    ImGui::Begin(winname[i].c_str(), NULL, ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar);
                     {
-                        ImGui::Image(imTxArray[i], ImVec2(childw, childw));
+                        imageBuf[i].DrawImage();
+                        //ImGui::Image(imTxArray[i], ImVec2(childw, childw));
                     }
-                    ImGui::EndChild();
+                    ImGui::End();
+                    childx += childw;
                     ImGui::SameLine();
                 }
             }
-            ImGui::End();
+            //ImGui::End();
 
             // ここまで
 
