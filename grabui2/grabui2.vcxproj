@@ -144,10 +144,19 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="BufferedImage.cpp" />
+    <ClCompile Include="CameraEmu.cpp" />
+    <ClCompile Include="CameraMain.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="util.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BaslerConfig.h" />
     <ClInclude Include="BufferedImage.h" />
+    <ClInclude Include="CameraBase.h" />
+    <ClInclude Include="CameraMain.h" />
+    <ClInclude Include="CameraEmu.h" />
+    <ClInclude Include="EmuConfig.h" />
+    <ClInclude Include="TemplateParameterSet.h" />
     <ClInclude Include="util.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

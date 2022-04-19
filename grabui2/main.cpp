@@ -21,6 +21,7 @@
 
 #include <pylon/PylonIncludes.h>
 //#include <pylon/PylonGUI.h>
+#include "CameraEmu.h"
 
 
 // [Win32] Our example includes a copy of glfw3.lib pre-compiled with VS2010 to maximize ease of testing and compatibility with old VS compilers.
@@ -37,6 +38,7 @@ static void glfw_error_callback(int error, const char* description)
 
 // データをGPUへ展開
 //#include <GL/gl3w.h>
+#if 0
 ImTextureID uint8Gray2gltexture(GLuint& texture, int cols, int rows, uint8_t* data)
 {
     //GLuint texture;
@@ -51,8 +53,7 @@ ImTextureID uint8Gray2gltexture(GLuint& texture, int cols, int rows, uint8_t* da
 
     return (ImTextureID)(intptr_t)texture;
 }
-
-
+#endif
 
 int main(int, char**)
 {
@@ -148,10 +149,16 @@ int main(int, char**)
 
     // GL
     // テクスチャ
-    BufferedImage imageBuf[3];
     string winname[3] = { "a", "b", "c" };
+
+    // イメージバッファ
+    //BufferedImage image[3];
+
+    // カメラクラス
+    CameraEmu cameraArr[3];
+    size_t cameraArrNum;
    
-        try
+    try
     {
         // Get the transport layer factory.
         CTlFactory& tlFactory = CTlFactory::GetInstance();
@@ -167,18 +174,25 @@ int main(int, char**)
         CInstantCameraArray cameras(min(devices.size(), c_maxCamerasToUse));
 
         // Create and attach all Pylon Devices.
-        for (size_t i = 0; i < cameras.GetSize(); ++i)
+        cameraArrNum = cameras.GetSize();
+        for (size_t i = 0; i < cameraArrNum; ++i)
         {
-            cameras[i].Attach(tlFactory.CreateDevice(devices[i]));
+            //cameras[i].Attach(tlFactory.CreateDevice(devices[i]));
+            cameraArr[i].AttachDevice(tlFactory.CreateDevice(devices[i]));
+            //cameraArr[i].AttachImageBuffer(&image[i]);
 
             // Print the model name of the camera.
-            cout << "Using device " << cameras[i].GetDeviceInfo().GetModelName() << endl;
+            //cout << "Using device " << cameras[i].GetDeviceInfo().GetModelName() << endl;
+            cout << "device S/N " << devices[i].GetSerialNumber() << endl;
+
+            // kick grabbing thread
+            cameraArr[i].StartGrabbing();
         }
 
         // grab start
-        cameras.StartGrabbing();
+        //cameras.StartGrabbing();
         // This smart pointer will receive the grab result data.
-        CGrabResultPtr ptrGrabResult;
+        //CGrabResultPtr ptrGrabResult;
 
         // Main loop
         while (!glfwWindowShouldClose(window))
@@ -214,9 +228,9 @@ int main(int, char**)
                 ImGui::Separator();
 
                 // カメラのシリアル番号を表示
-                for (size_t i = 0; i < cameras.GetSize(); ++i)
+                for (size_t i = 0; i < cameraArrNum; ++i)
                 {
-                    ImGui::Text(cameras[i].GetDeviceInfo().GetSerialNumber().c_str());
+                    ImGui::Text(devices[i].GetSerialNumber().c_str());
                 }
                 infoh = ImGui::GetWindowHeight();
             }
@@ -224,6 +238,8 @@ int main(int, char**)
 
             // 絵を表示
             // Grab c_countOfImagesToGrab from the cameras.
+            // スレッド内で soft trigger, on grabbing イベントで画像バッファを書き変え
+#if 0
             for (uint32_t i = 0; i < c_countOfImagesToGrab && cameras.IsGrabbing(); ++i)
             {
                 cameras.RetrieveResult(5000, ptrGrabResult, TimeoutHandling_ThrowException);
@@ -248,6 +264,7 @@ int main(int, char**)
 
                 }
             }
+#endif
 
             //static bool imageFlag = grabbed[0] && grabbed[1] && grabbed[2];
             
@@ -257,13 +274,14 @@ int main(int, char**)
             {
                 float childw = (w - 0.0f) / 3.0f;//ImGui::GetContentRegionAvail().x / 3.0f;
                 float childx = 0.0f;
-                for (int i = 0; i < 3; ++i) {
+                for (int i = 0; i < cameraArrNum; ++i) {
                     //ImGui::SetNextWindowSize(ImVec2(childw, childw));
                     ImGui::SetNextWindowPos(ImVec2(childx, infoh));
                     ImGui::SetNextWindowSize(ImVec2(childw, childw));
                     ImGui::Begin(winname[i].c_str(), NULL, ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar);
                     {
-                        imageBuf[i].DrawImage();
+                        cameraArr[i].DrawImage();
+                        //imageBuf[i].DrawImage();
                         //ImGui::Image(imTxArray[i], ImVec2(childw, childw));
                     }
                     ImGui::End();
