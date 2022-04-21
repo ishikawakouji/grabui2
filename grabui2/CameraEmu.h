@@ -12,7 +12,6 @@ public:
 	void Init();
 
 	void StartGrabbing();
-	void StopGrabbing();
 
 	void AfterGrabbing(const Pylon::CGrabResultPtr& ptrGrabResult);
 };

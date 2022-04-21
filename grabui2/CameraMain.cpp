@@ -3,115 +3,18 @@
 #include "BaslerConfig.h"
 #include "util.h"
 
-/**
-* イベントハンドラ
-*/
-class CMainImageEventPrinter : public Pylon::CImageEventHandler
-{
-private:
-	CameraBase* pCamera;
-public:
-	CMainImageEventPrinter(CameraBase* camera) {
-		pCamera = camera;
-	}
 
-	virtual void OnImagesSkipped(Pylon::CInstantCamera& camera, size_t countOfSkippedImages)
-	{
-		std::cout << "OnImagesSkipped event for device " << camera.GetDeviceInfo().GetModelName() << std::endl;
-		std::cout << countOfSkippedImages << " images have been skipped." << std::endl;
-		std::cout << std::endl;
-	}
-
-
-	virtual void OnImageGrabbed(Pylon::CInstantCamera& camera, const Pylon::CGrabResultPtr& ptrGrabResult)
-	{
-		std::cout << "OnImageGrabbed event for device " << camera.GetDeviceInfo().GetModelName() << std::endl;
-
-		// カメラにまかせる
-		pCamera->AfterGrabbing(ptrGrabResult);
-
-#if 0
-
-		// Image grabbed successfully?
-		if (ptrGrabResult->GrabSucceeded())
-		{
-			char buf[64];
-			SYSTEMTIME lt;
-			GetLocalTime(&lt);
-			sprintf_s(buf, 64, "%04d%02d%02d_%02d%02d%02d_%03d", lt.wYear, lt.wMonth, lt.wDay, lt.wHour, lt.wMinute, lt.wSecond, lt.wMilliseconds);
-			*/
-			string buf;
-			GetTimeString(&buf);
-
-			std::cout << "Time: " << buf << std::endl;
-
-			std::cout << "SizeX: " << ptrGrabResult->GetWidth() << std::endl;
-			std::cout << "SizeY: " << ptrGrabResult->GetHeight() << std::endl;
-			const uint8_t* pImageBuffer = (uint8_t*)ptrGrabResult->GetBuffer();
-			//std::cout << "Gray value of first pixel: " << (uint32_t)pImageBuffer[0] << std::endl;
-			std::cout << std::endl;
-
-			//Pylon::DisplayImage(1, ptrGrabResult);
-
-			// ファイル名準備
-
-			// TODO: カメラにおまかせ？
-			if (pCamera->IsGainDouble()) {
-				sprintf_s(buf, 64, "%04d%02d%02d_%02d%02d%02d_%03d_G%3.1f_%dus.png",
-					lt.wYear, lt.wMonth, lt.wDay, lt.wHour, lt.wMinute, lt.wSecond, lt.wMilliseconds,
-					pCamera->GetDoubleGain(), (int)pCamera->GetDoubleExposureTime());
-			}
-			else {
-				sprintf_s(buf, 64, "%04d%02d%02d_%02d%02d%02d_%03d_G%3.1f_%dus.png",
-					lt.wYear, lt.wMonth, lt.wDay, lt.wHour, lt.wMinute, lt.wSecond, lt.wMilliseconds,
-					(float)pCamera->GetIntGain(), (int)pCamera->GetDoubleExposureTime());
-			}
-
-			//printf("filename (%s)\n", buf);
-
-			// 保存するか
-			if (!pCamera->IsSaved()) {
-				// グローバルにコピー
-				memcpy_s(Gname_buffer, 64, buf, 64);
-
-				std::thread th(threadSave, ptrGrabResult);
-				th.detach();
-				pCamera->ItSaved();
-			}
-
-			// 255のカウント
-			int pix = 0;
-			size_t size = ptrGrabResult->GetBufferSize();
-
-			// 周囲9つを見てメジアンが255かどか
-			pix = count_median255(ptrGrabResult->GetWidth(), ptrGrabResult->GetHeight(), pImageBuffer);
-
-			pCamera->SetPixel255(pix);
-			std::cout << "buffer size: " << size << std::endl;
-			std::cout << "255 pixs: " << pix << std::endl;
-			std::cout << std::endl;
-
-		}
-		else
-		{
-			std::cout << "Error: " << ptrGrabResult->GetErrorCode() << " " << ptrGrabResult->GetErrorDescription() << std::endl;
-		}
-#endif
-	}
-};
-
-
-void CameraMain::Init()
-{
-	CameraBase::Init();
-
+void CameraMain::setConfig() {
 	// パラメータ設定
 	camera.RegisterConfiguration(new CSoftTriggerCustomize, Pylon::RegistrationMode_ReplaceAll, Pylon::Cleanup_Delete);
 
 	// イベントハンドラ設定
 	camera.RegisterConfiguration(new CSampleConfigurationEventPrinter, Pylon::RegistrationMode_Append, Pylon::Cleanup_Delete);
 	camera.RegisterImageEventHandler(new CMainImageEventPrinter(this), Pylon::RegistrationMode_Append, Pylon::Cleanup_Delete);
+}
 
+void CameraMain::Init()
+{
 	// デバイスオープン
 	// Open the camera for accessing the parameters.
 	camera.Open();
@@ -160,10 +63,14 @@ void threadMainGrabbing(CameraMain* caller)
 
 		// Wait for user input to trigger the camera or exit the program.
 		// The grabbing is stopped, the device is closed and destroyed automatically when the camera object goes out of scope.
-		while (caller->isGrabbing())
+		while (true)
 		{
 			// シャッター待ち
 			Sleep(1000);
+
+			if (!caller->isGrabbing()) {
+				break;
+			}
 
 			// シャッタートリガ
 			// Execute the software trigger. Wait up to 1000 ms for the camera to be ready for trigger.
@@ -179,9 +86,17 @@ void threadMainGrabbing(CameraMain* caller)
 
 void CameraMain::StartGrabbing()
 {
+	// すでに起動中ならなにもしない
+	if (isGrabbing()) {
+		return;
+	}
+
 	try {
 		// デバイスに伝える
 		camera.StartGrabbing(Pylon::GrabStrategy_OneByOne, Pylon::GrabLoop_ProvidedByInstantCamera);
+
+		// 撮影中
+		setGrabbing();
 
 		std::thread th(threadMainGrabbing, this);
 		th.detach();
@@ -192,10 +107,6 @@ void CameraMain::StartGrabbing()
 		std::cerr << "An exception occurred." << std::endl
 			<< e.GetDescription() << std::endl;
 	}
-}
-void CameraMain::StopGrabbing()
-{
-	unsetGrabbing();
 }
 
 void CameraMain::AfterGrabbing(const Pylon::CGrabResultPtr& ptrGrabResult)

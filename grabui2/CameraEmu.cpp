@@ -62,10 +62,14 @@ void threadEmuGrabbing(CameraEmu* caller)
 
 		// Wait for user input to trigger the camera or exit the program.
 		// The grabbing is stopped, the device is closed and destroyed automatically when the camera object goes out of scope.
-		while (caller->isGrabbing())
+		while (true)
 		{
 			// シャッター待ち
 			Sleep(1000);
+
+			if (!caller->isGrabbing()) {
+				break;
+			}
 
 			// シャッタートリガ
 			// Execute the software trigger. Wait up to 1000 ms for the camera to be ready for trigger.
@@ -81,6 +85,11 @@ void threadEmuGrabbing(CameraEmu* caller)
 
 void CameraEmu::StartGrabbing()
 {
+	// すでに起動中ならなにもしない
+	if (isGrabbing()) {
+		return;
+	}
+
 	try {
 		// デバイスに伝える
 		camera.StartGrabbing(Pylon::GrabStrategy_OneByOne, Pylon::GrabLoop_ProvidedByInstantCamera);
@@ -98,11 +107,6 @@ void CameraEmu::StartGrabbing()
 			<< e.GetDescription() << std::endl;
 	}
 }
-void CameraEmu::StopGrabbing()
-{
-	unsetGrabbing();
-}
-
 
 void CameraEmu::AfterGrabbing(const Pylon::CGrabResultPtr& ptrGrabResult)
 {

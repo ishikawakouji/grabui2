@@ -22,6 +22,8 @@
 #include <pylon/PylonIncludes.h>
 //#include <pylon/PylonGUI.h>
 #include "CameraEmu.h"
+#include "CameraMain.h"
+#include "CameraSub.h"
 
 
 // [Win32] Our example includes a copy of glfw3.lib pre-compiled with VS2010 to maximize ease of testing and compatibility with old VS compilers.
@@ -147,16 +149,19 @@ int main(int, char**)
     // Number of images to be grabbed.
     static const uint32_t c_countOfImagesToGrab = 3;
 
-    // GL
-    // テクスチャ
+    // 画像表示ウィンドウの名前
     string winname[3] = { "a", "b", "c" };
 
     // イメージバッファ
     //BufferedImage image[3];
 
     // カメラクラス
-    CameraEmu cameraArr[3];
-    size_t cameraArrNum;
+    CameraBase *cameraArr[3];
+    size_t cameraArrNum = 0;
+    bool doneMainCamera = false;
+
+    // 撮影ON OFF
+    bool runGrab = false;
    
     try
     {
@@ -177,8 +182,23 @@ int main(int, char**)
         cameraArrNum = cameras.GetSize();
         for (size_t i = 0; i < cameraArrNum; ++i)
         {
+            // カメラがエミュレータかどうか調べる
+            //cout << "device mode name " << devices[i].GetModelName() << endl;
+            if (devices[i].GetModelName() == "Emulation") {
+                cameraArr[i] = new CameraEmu();
+            }
+            else {
+                if (doneMainCamera) {
+                    cameraArr[i] = new CameraSub();
+                }
+                else {
+                    cameraArr[i] = new CameraMain();
+                    doneMainCamera = true;
+                }
+            }
+
             //cameras[i].Attach(tlFactory.CreateDevice(devices[i]));
-            cameraArr[i].AttachDevice(tlFactory.CreateDevice(devices[i]));
+            cameraArr[i]->AttachDevice(tlFactory.CreateDevice(devices[i]));
             //cameraArr[i].AttachImageBuffer(&image[i]);
 
             // Print the model name of the camera.
@@ -186,7 +206,7 @@ int main(int, char**)
             cout << "device S/N " << devices[i].GetSerialNumber() << endl;
 
             // kick grabbing thread
-            cameraArr[i].StartGrabbing();
+            //cameraArr[i]->StartGrabbing();
         }
 
         // grab start
@@ -232,9 +252,28 @@ int main(int, char**)
                 {
                     ImGui::Text(devices[i].GetSerialNumber().c_str());
                 }
+
+                ImGui::Separator();
+
+                // 撮影開始、停止ボタン
+                ImGui::Checkbox(u8"撮影", &runGrab);
+
+                // このウィンドウの高さを持つ
                 infoh = ImGui::GetWindowHeight();
             }
             ImGui::End();
+
+            // カメラの起動、停止
+            if (runGrab) {
+                for (int i = 0; i < cameraArrNum; ++i) {
+                    cameraArr[i]->StartGrabbing();
+                }
+            }
+            else {
+                for (int i = 0; i < cameraArrNum; ++i) {
+                    cameraArr[i]->StopGrabbing();
+                }
+            }
 
             // 絵を表示
             // Grab c_countOfImagesToGrab from the cameras.
@@ -280,7 +319,7 @@ int main(int, char**)
                     ImGui::SetNextWindowSize(ImVec2(childw, childw));
                     ImGui::Begin(winname[i].c_str(), NULL, ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar);
                     {
-                        cameraArr[i].DrawImage();
+                        cameraArr[i]->DrawImage();
                         //imageBuf[i].DrawImage();
                         //ImGui::Image(imTxArray[i], ImVec2(childw, childw));
                     }
@@ -315,6 +354,11 @@ int main(int, char**)
         exitCode = 1;
     }
 
+    // カメラインスタンス削除
+    for (int i = 0; i < cameraArrNum; ++i) {
+        delete cameraArr[i];
+    }
+
     // Releases all pylon resources.
     PylonTerminate();
 
@@ -325,6 +369,8 @@ int main(int, char**)
 
     glfwDestroyWindow(window);
     glfwTerminate();
+
+
 
     return 0;
 }

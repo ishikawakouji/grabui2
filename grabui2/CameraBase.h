@@ -80,9 +80,19 @@ public:
 	}
 #endif
 
+	~CameraBase() {
+		StopGrabbing();
+	}
+
 	// grab スレッド起動、終了
 	virtual void StartGrabbing() = 0;
-	virtual void StopGrabbing() = 0;
+	virtual void StopGrabbing() {
+		if (!isGrabbing()) {
+			return;
+		}
+		unsetGrabbing();
+		camera.Close();
+	}
 
 	// grab 処理
 	virtual void AfterGrabbing(const Pylon::CGrabResultPtr& ptrGrabResult) = 0;
