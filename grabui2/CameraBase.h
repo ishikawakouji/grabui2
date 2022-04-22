@@ -1,9 +1,11 @@
 #pragma once
 #include <string>
+#include "imgui.h"
 #include <pylon/PylonIncludes.h>
 
 #include "BufferedImage.h"
 
+using namespace std;
 using namespace Pylon;
 
 class CameraBase
@@ -50,9 +52,31 @@ protected:
 	BufferedImage image;
 
 protected:
+	// 露出時間のノード
+	Pylon::CFloatParameter doubleExposureTime;
+	bool flagExposureTimeValid;
+
+	// ゲインのノードタイプ
+	enum class GAIN_TYPE {
+		GAIN_DOUBLE,
+		GAIN_INT64
+	};
+	enum class GAIN_TYPE typeGain;
+
+	// ゲインのノード、double
+	Pylon::CFloatParameter doubleGain;
+	double doubleGainMax;
+	double doubleGainMin;
+
+	// ゲインのノード、long long (int64_t)
+	Pylon::CIntegerParameter intGain;
+	int64_t intGainMax;
+	int64_t intGainMin;
+
+protected:
 	// 一回かぎりの設定
 	void Init() {
-		//serialNo = camera.GetDeviceInfo().GetSerialNumber().c_str();
+		setNode();
 	}
 
 public:
@@ -94,6 +118,8 @@ public:
 		camera.Close();
 	}
 
+	void setNode();
+
 	// grab 処理
 	virtual void AfterGrabbing(const Pylon::CGrabResultPtr& ptrGrabResult) = 0;
 
@@ -102,4 +128,37 @@ public:
 		image.DrawImage();
 	}
 
+	// ゲインのやりとり
+	int64_t GetIntGain() { return intGain.GetValue(); }
+	double GetDoubleGain() { return doubleGain.GetValue(); }
+
+	void SetIntGain(int64_t val) { intGain.SetValue(val); }
+	void SetDoubleGain(double val) { doubleGain.SetValue(val); }
+
+	int64_t GetIntGainMax() { return intGainMax; }
+	int64_t GetIntGainMin() { return intGainMin; }
+
+	double GetDoubleGainMax() { return doubleGainMax; }
+	double GetDoubleGainMin() { return doubleGainMin; }
+
+	// 露出時間
+	double GetDoubleExposureTime() {
+		if (flagExposureTimeValid) {
+			return doubleExposureTime.GetValue();
+		}
+		return 1000.0;
+	}
+	void SetDoubleExposureTime(double val) {
+		if (flagExposureTimeValid) {
+			doubleExposureTime.SetValue(val);
+		}
+	}
+
+	// 表示用
+	string getGainMinMaxString();
+	string getGainString();
+	string getExposureString();
+
+	// パラメータ設定ポップアップ
+	void popupConfig(const char* winname);
 };

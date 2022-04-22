@@ -157,7 +157,7 @@ int main(int, char**)
     static const uint32_t c_countOfImagesToGrab = 3;
 
     // 画像表示ウィンドウの名前
-    string winname[3] = { "a", "b", "c" };
+    string cameraWinName[3] = { "a", "b", "c" };
 
     // イメージバッファ
     //BufferedImage image[3];
@@ -166,6 +166,7 @@ int main(int, char**)
     CameraBase *cameraArr[3];
     size_t cameraArrNum = 0;
     bool doneMainCamera = false;
+    string cameraInfo[3];
 
     // 撮影ON OFF
     bool runGrab = false;
@@ -327,10 +328,31 @@ int main(int, char**)
                 ImGui::Separator();
 
                 // カメラのシリアル番号を表示
-                for (size_t i = 0; i < cameraArrNum; ++i)
-                {
-                    ImGui::Text(devices[i].GetSerialNumber().c_str());
+                ImGui::BeginTable("cameras", 5); {
+                    for (size_t i = 0; i < cameraArrNum; ++i)
+                    {
+                        ImGui::TableNextColumn();
+                        if (ImGui::Button(cameraWinName[i].c_str())) {
+                            ImGui::OpenPopup((cameraWinName[i] + "_gain").c_str());
+                        };
+                        cameraArr[i]->popupConfig((cameraWinName[i] + "_gain").c_str());
+                        
+                        ImGui::TableNextColumn();
+                        ImGui::Text(devices[i].GetSerialNumber().c_str());
+                        
+                        ImGui::TableNextColumn();
+                        ImGui::Text(cameraArr[i]->getGainMinMaxString().c_str());
+
+                        ImGui::TableNextColumn();
+                        ImGui::Text(cameraArr[i]->getGainString().c_str());
+
+                        ImGui::TableNextColumn();
+                        ImGui::Text(cameraArr[i]->getExposureString().c_str());
+
+                        ImGui::TableNextRow();
+                    }
                 }
+                ImGui::EndTable();
 
                 ImGui::Separator();
 
@@ -338,7 +360,7 @@ int main(int, char**)
                 ImGui::Checkbox(u8"撮影", &runGrab);
 
                 // 全体のゲイン固定ON/OFF
-                ImGui::Separator();
+                ImGui::SameLine();
                 ImGui::Checkbox(u8"全体ゲイン固定", &fixGain);
 
                 // このウィンドウの高さを持つ
@@ -400,7 +422,7 @@ int main(int, char**)
                     //ImGui::SetNextWindowSize(ImVec2(childw, childw));
                     ImGui::SetNextWindowPos(ImVec2(childx, infoh));
                     ImGui::SetNextWindowSize(ImVec2(childw, childw));
-                    ImGui::Begin(winname[i].c_str(), NULL, ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar);
+                    ImGui::Begin(cameraWinName[i].c_str(), NULL, ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar);
                     {
                         cameraArr[i]->DrawImage();
                         //imageBuf[i].DrawImage();

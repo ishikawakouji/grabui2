@@ -144,6 +144,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="BufferedImage.cpp" />
+    <ClCompile Include="CameraBase.cpp" />
     <ClCompile Include="CameraEmu.cpp" />
     <ClCompile Include="CameraMain.cpp" />
     <ClCompile Include="CameraSub.cpp" />

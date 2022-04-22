@@ -15,6 +15,9 @@ void CameraMain::setConfig() {
 
 void CameraMain::Init()
 {
+	// preInitでやっている
+	//CameraBase::Init();
+
 	// デバイスオープン
 	// Open the camera for accessing the parameters.
 	camera.Open();
