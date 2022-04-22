@@ -17,6 +17,7 @@
 
 // 自分のユーティリティ
 #include "util.h"
+#include "utf8sjis.h"
 #include "BufferedImage.h"
 
 #include <pylon/PylonIncludes.h>
@@ -133,12 +134,18 @@ int main(int, char**)
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
     // 直下の data ディレクトリへ移動
-    moveToDir("data");
+    // 起点となるディレクトリを記憶
+    makeAndMoveDir("data");
     char* tmp;
     string currentDirPath;
     if ((tmp = _getcwd(NULL, 0)) != NULL) {
         currentDirPath = tmp;
     }
+    string origPath = currentDirPath;
+
+    // dataからの相対パス
+    string diffSjisPath;
+    string diffu8Path;
 
     // カメラの状態を確認
     using namespace Pylon;
@@ -162,7 +169,10 @@ int main(int, char**)
 
     // 撮影ON OFF
     bool runGrab = false;
-   
+
+    // 全体ゲイン固定
+    bool fixGain = true;
+
     try
     {
         // Get the transport layer factory.
@@ -242,8 +252,77 @@ int main(int, char**)
             ImGui::SetNextWindowSize(ImVec2(w - 0.0f, 0.0f));
             ImGui::Begin("info", 0, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_AlwaysAutoResize);
             {
+                // 保存先変更
+                if (ImGui::Button(u8"保存先")) {
+                    ImGui::OpenPopup("ChangeDir");
+                }
+                
+                if (ImGui::BeginPopupModal("ChangeDir"))
+                {
+                    ImGui::Text(u8"車名");
+                    ImGui::SameLine();
+                    static char saveCarName[64] = { '\0' };
+                    ImGui::InputText(u8"車名を入れる", saveCarName, 64);
+
+                    ImGui::Separator();
+
+                    ImGui::Text(u8"パネル");
+                    static string savePanelName;
+                    if (ImGui::Button(u8"左前フェ")) {
+                        savePanelName = "LFF";
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::Button(u8"左前ドア")) {
+                        savePanelName = "LFD";
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::Button(u8"左後ドア")) {
+                        savePanelName = "LRD";
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::Button(u8"左後フェ")) {
+                        savePanelName = "LRF";
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::Button(u8"右前フェ")) {
+                        savePanelName = "RFF";
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::Button(u8"右前ドア")) {
+                        savePanelName = "RFD";
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::Button(u8"右後ドア")) {
+                        savePanelName = "RRD";
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::Button(u8"右後フェ")) {
+                        savePanelName = "RRF";
+                    }
+                    
+                    string nullPath;
+                    ImGui::Text((nullPath + saveCarName + "/" + savePanelName).c_str());
+                    
+                    if (ImGui::Button("OK")) {
+                        // 一度、起点へ戻る
+                        moveDir(origPath);
+                        // SJISへ
+                        diffu8Path = nullPath + saveCarName + "/" + savePanelName;
+                        diffSjisPath = utf8_to_wide_to_multi_winapi((nullPath + saveCarName + "/" + savePanelName));
+                        makeAndMoveDir(diffSjisPath);
+                        ImGui::CloseCurrentPopup();
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::Button("cancel")) {
+                        ImGui::CloseCurrentPopup();
+                    }
+                    ImGui::EndPopup();
+                }
+                
+                ImGui::SameLine();
+
                 // 保存先(=カレント)の表示
-                ImGui::Text(currentDirPath.c_str());
+                ImGui::Text((currentDirPath + "/" + diffu8Path).c_str());
 
                 ImGui::Separator();
 
@@ -257,6 +336,10 @@ int main(int, char**)
 
                 // 撮影開始、停止ボタン
                 ImGui::Checkbox(u8"撮影", &runGrab);
+
+                // 全体のゲイン固定ON/OFF
+                ImGui::Separator();
+                ImGui::Checkbox(u8"全体ゲイン固定", &fixGain);
 
                 // このウィンドウの高さを持つ
                 infoh = ImGui::GetWindowHeight();

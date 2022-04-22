@@ -10,7 +10,9 @@ using namespace std;
 
     ‹æØ‚è‚Í "/" ‚Å
 */
-extern int moveToDir(const string& dir);
+extern int makeAndMoveDir(const string& dir);
+
+extern int moveDir(const string& dir);
 
 extern void GetTimeString(string* output);
 

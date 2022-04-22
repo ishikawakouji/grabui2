@@ -7,7 +7,7 @@
 
     ‹æØ‚è‚Í "/" ‚Å
 */
-int moveToDir(const string& dir) {
+int makeAndMoveDir(const string& dir) {
 
     string strPath = dir;
 
@@ -30,6 +30,11 @@ int moveToDir(const string& dir) {
     int ret = _chdir(strPath.c_str());
 
     return ret;
+}
+
+int moveDir(const string& dir) {
+	int ret = _chdir(dir.c_str());
+	return ret;
 }
 
 void GetTimeString(string* output) {

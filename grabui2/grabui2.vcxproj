@@ -148,6 +148,7 @@
     <ClCompile Include="CameraMain.cpp" />
     <ClCompile Include="CameraSub.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="utf8sjis.cpp" />
     <ClCompile Include="util.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -160,6 +161,7 @@
     <ClInclude Include="EmuConfig.h" />
     <ClInclude Include="Line1TriggerConfiguration.h" />
     <ClInclude Include="TemplateParameterSet.h" />
+    <ClInclude Include="utf8sjis.h" />
     <ClInclude Include="util.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
