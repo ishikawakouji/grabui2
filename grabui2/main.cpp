@@ -263,7 +263,7 @@ int main(int, char**)
                     ImGui::Text(u8"ŽÔ–¼");
                     ImGui::SameLine();
                     static char saveCarName[64] = { '\0' };
-                    ImGui::InputText(u8"ŽÔ–¼‚ð“ü‚ê‚é", saveCarName, 64);
+                    ImGui::InputText(u8"ŽÔ–¼‚ð“ü‚ê‚é", saveCarName, 64, ImGuiInputTextFlags_EnterReturnsTrue);
 
                     ImGui::Separator();
 
