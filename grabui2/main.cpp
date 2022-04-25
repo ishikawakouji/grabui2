@@ -351,8 +351,8 @@ int main(int, char**)
 
                 ImGui::Separator();
 
-                // カメラのシリアル番号を表示
-                ImGui::BeginTable("cameras", 5); {
+                // カメラの情報を表示
+                ImGui::BeginTable("cameras", 6); {
                     for (size_t i = 0; i < cameraArrNum; ++i)
                     {
                         ImGui::TableNextColumn();
@@ -372,6 +372,9 @@ int main(int, char**)
 
                         ImGui::TableNextColumn();
                         ImGui::Text(cameraArr[i]->getExposureString().c_str());
+
+                        ImGui::TableNextColumn();
+                        ImGui::Text(cameraArr[i]->getCount255String().c_str());
 
                         ImGui::TableNextRow();
                     }

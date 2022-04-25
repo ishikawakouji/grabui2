@@ -19,6 +19,7 @@ private:
 
 	// 255カウント
 	bool fcount255 = false;
+	int count255 = 0;
 
 	// 255調整
 	bool ftune255 = false;
@@ -27,6 +28,11 @@ private:
 	char saveFileName[FILE_NAME_LEN];
 
 public:
+	// 255カウント
+	void setCount255(int val) { count255 = val; }
+	int getCount255() {
+		return count255;
+	}
 	// 保存する
 	void setSaveFileName(const char* filename) {
 		memcpy_s(saveFileName, FILE_NAME_LEN, filename, FILE_NAME_LEN);
@@ -181,6 +187,7 @@ public:
 	string getGainMinMaxString();
 	string getGainString();
 	string getExposureString();
+	string getCount255String();
 
 	// パラメータ設定ポップアップ
 	void popupConfig(const char* winname);

@@ -137,6 +137,7 @@ void CameraMain::AfterGrabbing(const Pylon::CGrabResultPtr& ptrGrabResult)
 		//image->CopyToGpu(w, h, 1, pImage);
 
 		// 255ƒJƒEƒ“ƒg
+		setCount255(count_median255(w, h, pImage));
 
 		// 255’²®
 

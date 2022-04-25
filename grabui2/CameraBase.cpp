@@ -90,6 +90,13 @@ string CameraBase::getExposureString()
 	return string(buf);
 }
 
+string CameraBase::getCount255String()
+{
+	char buf[64];
+	sprintf_s(buf, 64, "%i", count255);
+	return string(buf);
+}
+
 // ˜IoŠÔ‚ÆƒQƒCƒ“‚Ì’²®
 // ‘¦”½‰f
 void CameraBase::popupConfig(const char* winname)
