@@ -46,7 +46,9 @@ void CameraEmu::Init()
 
 	// デバイスオープン
 	// Open the camera for accessing the parameters.
-	camera.Open();
+	//camera.Open();
+
+	CameraBase::setNode();
 }
 
 // 撮影スレッド、クラスの中には無い

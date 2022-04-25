@@ -18,6 +18,8 @@ void CameraMain::Init()
 	// preInitでやっている
 	//CameraBase::Init();
 
+	CameraBase::setNode();
+#if 0 // setNode
 	// デバイスオープン
 	// Open the camera for accessing the parameters.
 	camera.Open();
@@ -47,6 +49,7 @@ void CameraMain::Init()
 	// 露出時間
 	doubleExposureTime.Attach(camera.GetNodeMap().GetNode("ExposureTime"));
 	flagExposureTimeValid = doubleExposureTime.IsValid();
+#endif
 
 	// 255個数リセット
 	pixel255 = 0;
@@ -138,6 +141,24 @@ void CameraMain::AfterGrabbing(const Pylon::CGrabResultPtr& ptrGrabResult)
 		// 255調整
 
 		// 保存
+		if (isSave()) {
+			string devName = camera.GetDeviceInfo().GetSerialNumber().c_str();
+			string timeStamp;
+			GetTimeString(&timeStamp);
+			string gainStr = getGainString();
+			string exTimeStr = getExposureString();
+
+			string filename = devName + "_" + timeStamp + "_G" + gainStr + "_" + exTimeStr + ".png";
+			if (filename.length() < FILE_NAME_LEN) {
+				setSaveFileName(filename.c_str());
+				startSaveImage();
+			}
+			else {
+				cout << "file name too long, " << filename << endl;
+			}
+
+			unsetSave();
+		}
 
 	}
 }

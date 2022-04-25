@@ -3,6 +3,8 @@
 #include <GL/gl3w.h>            // Initialize with gl3wInit()
 #include <GLFW/glfw3.h> // Will drag system OpenGL headers
 
+#define FILE_NAME_LEN 128
+
 // ImGui::Image() のラッピング
 // バッファの更新と、描画を分けている
 // バッファは GPU上のテクスチャとして保持、与えられたデータからコピーする
@@ -28,6 +30,14 @@ private:
     float imageScale = 1.0f;
     bool fitted = true;
 
+    // 保存時のファイル名
+    char saveFileName[FILE_NAME_LEN];
+
+public:
+    int getWidth() { return width; }
+    int getHeight() { return height; }
+    unsigned char* getImageDataPtr() { return localbuf; }
+    char* getFileName() { return saveFileName; }
 
 private:
     // データをGPUへ展開
@@ -60,4 +70,7 @@ public:
 
     // 描画
     void DrawImage();
+
+    // 保存
+    void imgWrite(const char* filename);
 };

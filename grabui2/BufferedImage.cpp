@@ -1,5 +1,7 @@
 #include <memory>
+#include <thread>
 #include <stdio.h>
+#include <opencv2/opencv.hpp>
 #include "BufferedImage.h"
 
 void BufferedImage::uint8Gray2gltexture(int cols, int rows, const unsigned char* data)
@@ -119,4 +121,24 @@ void BufferedImage::DrawImage() {
     // テクスチャを描画
     ImGui::SetCursorPos(imagePos);
     ImGui::Image(imtxtname, ImVec2(width * imageScale, height * imageScale));
+}
+
+// イメージ保存
+
+void threadSave(BufferedImage* pBuffer)
+{
+
+    cv::Mat image(pBuffer->getHeight(), pBuffer->getWidth(), CV_8UC1, pBuffer->getImageDataPtr());
+    cv::imwrite(pBuffer->getFileName(), image);
+
+    //Beep(500, 500);
+
+}
+
+void BufferedImage::imgWrite(const char* filename)
+{
+    memcpy_s(saveFileName, FILE_NAME_LEN, filename, FILE_NAME_LEN);
+
+    std::thread th(threadSave, this);
+    th.detach();
 }

@@ -23,6 +23,18 @@ private:
 	// 255調整
 	bool ftune255 = false;
 
+	// 保存ファイル名のポインタ
+	char saveFileName[FILE_NAME_LEN];
+
+public:
+	// 保存する
+	void setSaveFileName(const char* filename) {
+		memcpy_s(saveFileName, FILE_NAME_LEN, filename, FILE_NAME_LEN);
+	}
+	char* getSaveFileName() {
+		return saveFileName;
+	}
+
 public:
 	// 撮影中フラグ
 	bool isGrabbing() { return fgrabbing; }
@@ -55,6 +67,7 @@ protected:
 	// 露出時間のノード
 	Pylon::CFloatParameter doubleExposureTime;
 	bool flagExposureTimeValid;
+	double exposureTimeCache = 0.0;
 
 	// ゲインのノードタイプ
 	enum class GAIN_TYPE {
@@ -67,16 +80,19 @@ protected:
 	Pylon::CFloatParameter doubleGain;
 	double doubleGainMax;
 	double doubleGainMin;
+	double doubleGainCache = 0.0;
 
 	// ゲインのノード、long long (int64_t)
 	Pylon::CIntegerParameter intGain;
 	int64_t intGainMax;
 	int64_t intGainMin;
+	int64_t intGainCache = 0;
 
 protected:
 	// 一回かぎりの設定
 	void Init() {
-		setNode();
+		// node設定は Open()の後
+		//setNode();
 	}
 
 public:
@@ -129,11 +145,17 @@ public:
 	}
 
 	// ゲインのやりとり
-	int64_t GetIntGain() { return intGain.GetValue(); }
-	double GetDoubleGain() { return doubleGain.GetValue(); }
+	int64_t GetIntGain() { return intGainCache; }
+	double GetDoubleGain() { return doubleGainCache; }
 
-	void SetIntGain(int64_t val) { intGain.SetValue(val); }
-	void SetDoubleGain(double val) { doubleGain.SetValue(val); }
+	void SetIntGain(int64_t val) {
+		intGain.SetValue(val);
+		intGainCache = val;
+	}
+	void SetDoubleGain(double val) {
+		doubleGain.SetValue(val);
+		doubleGainCache = val;
+	}
 
 	int64_t GetIntGainMax() { return intGainMax; }
 	int64_t GetIntGainMin() { return intGainMin; }
@@ -144,13 +166,14 @@ public:
 	// 露出時間
 	double GetDoubleExposureTime() {
 		if (flagExposureTimeValid) {
-			return doubleExposureTime.GetValue();
+			return exposureTimeCache;
 		}
 		return 1000.0;
 	}
 	void SetDoubleExposureTime(double val) {
 		if (flagExposureTimeValid) {
 			doubleExposureTime.SetValue(val);
+			exposureTimeCache = val;
 		}
 	}
 
@@ -161,4 +184,10 @@ public:
 
 	// パラメータ設定ポップアップ
 	void popupConfig(const char* winname);
+
+	// 保存開始、image におまかせ
+	void startSaveImage()
+	{
+		image.imgWrite(saveFileName);
+	}
 };

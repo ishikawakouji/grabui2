@@ -174,6 +174,9 @@ int main(int, char**)
     // 全体ゲイン固定
     bool fixGain = true;
 
+    // 保存中
+    bool runSave = false;
+
     try
     {
         // Get the transport layer factory.
@@ -263,12 +266,33 @@ int main(int, char**)
                     ImGui::Text(u8"車名");
                     ImGui::SameLine();
                     static char saveCarName[64] = { '\0' };
-                    ImGui::InputText(u8"車名を入れる", saveCarName, 64, ImGuiInputTextFlags_EnterReturnsTrue);
+                    static char preBuffer[64] = {'\0'};
+                    if (ImGui::InputText(u8"車名を入れる", preBuffer, 64, ImGuiInputTextFlags_EnterReturnsTrue)) {
+                        memcpy_s(saveCarName, 64, preBuffer, 64);
+                    }
 
                     ImGui::Separator();
 
                     ImGui::Text(u8"パネル");
                     static string savePanelName;
+#if 0
+                    char panelLabels[8][16] = { u8"左前フェ", u8"左前ドア", u8"左後ドア", u8"左後フェ",
+                                        u8"右前フェ", u8"右前ドア", u8"右後ドア", u8"右後フェ" };
+                    char panelPath[8][8] = { "LFF", "LFD", "LRD", "LRF", "RFF", "RFD", "RRD", "RRF" };
+
+
+                    for (int i = 0; i < 8; ++i) {
+                        if (i > 0) {
+                            ImGui::SameLine();
+                        }
+
+                        ImGui::PushID(i);
+                        if (ImGui::Selectable(panelLabels[i], savePanelName == panelPath[i])) {
+                            savePanelName = panelPath[i];
+                        }
+                        ImGui::PopID();
+                    }
+#endif
                     if (ImGui::Button(u8"左前フェ")) {
                         savePanelName = "LFF";
                     }
@@ -300,7 +324,7 @@ int main(int, char**)
                     if (ImGui::Button(u8"右後フェ")) {
                         savePanelName = "RRF";
                     }
-                    
+
                     string nullPath;
                     ImGui::Text((nullPath + saveCarName + "/" + savePanelName).c_str());
                     
@@ -434,6 +458,36 @@ int main(int, char**)
                 }
             }
             //ImGui::End();
+
+            // 保存、ボタンではなくショートカット
+            if (ImGui::IsKeyReleased(ImGui::GetKeyIndex(ImGuiKey_Space)) // space key
+                || ImGui::IsMouseReleased(ImGuiMouseButton_Right)) // mouse right button
+            {
+                runSave = true;
+
+                // カメラに伝える
+                for (int i = 0; i < cameraArrNum; ++i) {
+                    cameraArr[i]->setSave();
+                }
+            }
+
+            // 保存中表示
+            {
+                static float dispTime = 0.0f;
+                if (runSave) {
+                    if (dispTime > 1.0f) {
+                        dispTime = 0.0f;
+                        runSave = false;
+                    }
+
+                    dispTime += io.DeltaTime;
+                    ImGui::BeginTooltip();
+                    ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+                    ImGui::TextUnformatted(u8"保存中");
+                    ImGui::PopTextWrapPos();
+                    ImGui::EndTooltip();
+                }
+            }
 
             // ここまで
 

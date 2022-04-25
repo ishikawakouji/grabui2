@@ -2,9 +2,18 @@
 
 void CameraBase::setNode()
 {
+	// ƒJƒƒ‰ƒI[ƒvƒ“
+	camera.Open();
+
 	// ˜IoŽžŠÔ
 	doubleExposureTime.Attach(camera.GetNodeMap().GetNode("ExposureTime"));
 	flagExposureTimeValid = doubleExposureTime.IsValid();
+	if (flagExposureTimeValid) {
+		exposureTimeCache = doubleExposureTime.GetValue();
+	}
+	else {
+		exposureTimeCache = 1000.0;
+	}
 
 	// ƒQƒCƒ“ƒm[ƒhŽæ“¾
 	if (camera.GetSfncVersion() >= Pylon::Sfnc_2_0_0)
@@ -16,6 +25,8 @@ void CameraBase::setNode()
 
 		doubleGainMax = doubleGain.GetMax();
 		doubleGainMin = doubleGain.GetMin();
+
+		doubleGainCache = doubleGain.GetValue();
 	}
 	else
 	{
@@ -26,6 +37,8 @@ void CameraBase::setNode()
 
 		intGainMax = intGain.GetMax();
 		intGainMin = intGain.GetMin();
+
+		intGainCache = intGain.GetValue();
 	}
 }
 
@@ -73,10 +86,12 @@ string CameraBase::getExposureString()
 {
 	char buf[64];
 
-	sprintf_s(buf, 64, "%.1f us", GetDoubleExposureTime());
+	sprintf_s(buf, 64, "%.1fus", GetDoubleExposureTime());
 	return string(buf);
 }
 
+// ˜IoŽžŠÔ‚ÆƒQƒCƒ“‚Ì’²®
+// ‘¦Žž”½‰f
 void CameraBase::popupConfig(const char* winname)
 {
 	ImGui::SetNextWindowSize(ImVec2(0.0, 0.0));
@@ -112,12 +127,15 @@ void CameraBase::popupConfig(const char* winname)
 		ImGui::Text("(500/1000)");
 		
 		ImGui::SameLine();
-		ImGui::InputDouble("double", &exposureTime, 0.0, 0.0, "%0.1f", ImGuiInputTextFlags_EnterReturnsTrue);
-		if (exposureTime > 1000.0f) {
-			exposureTime = 1000.0f;
-		}
-		if (exposureTime < 500.0f) {
-			exposureTime = 500.0f;
+		if (ImGui::InputDouble("exTime", &exposureTime, 0.0, 0.0, "%0.1f", ImGuiInputTextFlags_EnterReturnsTrue))
+		{
+			if (exposureTime > 1000.0f) {
+				exposureTime = 1000.0f;
+			}
+			if (exposureTime < 500.0f) {
+				exposureTime = 500.0f;
+			}
+			SetDoubleExposureTime(exposureTime);
 		}
 
 		// ƒQƒCƒ“’²®
@@ -128,21 +146,27 @@ void CameraBase::popupConfig(const char* winname)
 		switch (typeGain)
 		{
 		case GAIN_TYPE::GAIN_DOUBLE:
-			ImGui::InputDouble("double", &dGain, 0.0, 0.0, "%.1f", ImGuiInputTextFlags_EnterReturnsTrue);
-			if (dGain > GetDoubleGainMax()) {
-				dGain = GetDoubleGainMax();
-			}
-			if (dGain < GetDoubleGainMin()) {
-				dGain = GetDoubleGainMin();
+			if (ImGui::InputDouble("dGain", &dGain, 0.0, 0.0, "%.1f", ImGuiInputTextFlags_EnterReturnsTrue))
+			{
+				if (dGain > GetDoubleGainMax()) {
+					dGain = GetDoubleGainMax();
+				}
+				if (dGain < GetDoubleGainMin()) {
+					dGain = GetDoubleGainMin();
+				}
+				SetDoubleGain(dGain);
 			}
 			break;
 		case GAIN_TYPE::GAIN_INT64:
-			ImGui::InputInt("int", &iGain, 1, 100, ImGuiInputTextFlags_EnterReturnsTrue);
-			if (iGain > GetIntGainMax()) {
-				iGain = GetIntGainMax();
-			}
-			if (iGain < GetIntGainMin()) {
-				iGain = GetIntGainMin();
+			if (ImGui::InputInt("iGain", &iGain, 1, 100, ImGuiInputTextFlags_EnterReturnsTrue))
+			{
+				if (iGain > GetIntGainMax()) {
+					iGain = (int)GetIntGainMax();
+				}
+				if (iGain < GetIntGainMin()) {
+					iGain = (int)GetIntGainMin();
+				}
+				SetIntGain(iGain);
 			}
 			break;
 		default:
@@ -151,6 +175,8 @@ void CameraBase::popupConfig(const char* winname)
 		}
 
 		if (ImGui::Button("OK")) {
+			// ‘¦Žž”½‰f‚È‚Ì‚Å‚±‚±‚Å‚Í•s—v
+#if 0
 			SetDoubleExposureTime(exposureTime);
 
 			switch (typeGain)
@@ -165,8 +191,11 @@ void CameraBase::popupConfig(const char* winname)
 				iGain = 0;
 				break;
 			}
+#endif
 			ImGui::CloseCurrentPopup();
 		}
+#if 0
+		ImGui::SameLine();
 		if (ImGui::Button("cancel")) {
 			exposureTime = GetDoubleExposureTime();
 
@@ -184,6 +213,7 @@ void CameraBase::popupConfig(const char* winname)
 			}
 			ImGui::CloseCurrentPopup();
 		}
+#endif
 
 		ImGui::EndPopup();
 	}
