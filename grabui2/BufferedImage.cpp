@@ -2,6 +2,7 @@
 #include <thread>
 #include <stdio.h>
 #include <opencv2/opencv.hpp>
+#include <opencv2/imgproc/types_c.h>
 #include "BufferedImage.h"
 
 void BufferedImage::uint8Gray2gltexture(int cols, int rows, const unsigned char* data)
@@ -20,6 +21,22 @@ void BufferedImage::uint8Gray2gltexture(int cols, int rows, const unsigned char*
     imtxtname = (ImTextureID)(intptr_t)gltxtname;
 }
 
+// BGR 3ch Ç BGRA Ç∆ÇµÇƒï\é¶
+void  BufferedImage::cvMatBGR2BGRAgltexture(int cols, int rows, const unsigned char* data)
+{
+    //GLuint texture;
+    //glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, gltxtname);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+    //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.cols, image.rows, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.data);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, cols, rows, 0, GL_BGR, GL_UNSIGNED_BYTE, data);
+    //ImTextureID imtexture{ (ImTextureID)(intptr_t)texture };
+
+    imtxtname = (ImTextureID)(intptr_t)gltxtname;
+}
+
 void BufferedImage::imguiFitCenter(const ImVec2& regionmax, const ImVec2& padding, const float frameh, const int cols, const int rows, float& scale, ImVec2& pos)
 {
     // ägëÂèkè¨
@@ -33,11 +50,32 @@ void BufferedImage::imguiFitCenter(const ImVec2& regionmax, const ImVec2& paddin
 
 }
 
-void BufferedImage::CopyToGpu(int cols, int rows, int channel, const unsigned char* data) {
-    // Ç∆ÇËÇ†Ç¶Ç∏
+void BufferedImage::CopyToGpu(int cols, int rows, int channel, unsigned char* data) {
+    // emulaterÇ»ÇÁ channel = 1, pysical Ç»ÇÁ channel = 3
     width = cols;
     height = rows;
-    uint8Gray2gltexture(cols, rows, data);
+    imgSize = cols * rows * channel;
+    switch (imgCh) {
+    default:
+        printf("channel is broken\n");
+        break;
+    case 1:
+        uint8Gray2gltexture(cols, rows, data);
+        break;
+    case 3:
+        // bayer Ç cvMat Ç÷
+        cv::Mat img1(rows, cols, CV_8UC1, data);
+
+        // êFïœä∑
+        cv::Mat img2(rows, cols, CV_8UC3);
+        cv::cvtColor(img1, img2, CV_BayerBG2BGR);
+
+        // GPUÇ÷
+        cvMatBGR2BGRAgltexture(cols, rows, img2.data);
+
+        break;
+    }
+    
 
     //enable = true;
 }

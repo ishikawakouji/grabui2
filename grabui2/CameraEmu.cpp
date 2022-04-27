@@ -125,14 +125,13 @@ void CameraEmu::AfterGrabbing(const Pylon::CGrabResultPtr& ptrGrabResult)
 		// 画像の状態
 		uint32_t w = ptrGrabResult->GetWidth();
 		uint32_t h = ptrGrabResult->GetHeight();
-		std::cout << "SizeX: " << w << std::endl;
-		std::cout << "SizeY: " << h << std::endl;
-		std::cout << "size " << ptrGrabResult->GetBufferSize() << std::endl;
-
+		//std::cout << "SizeX: " << w << std::endl;
+		//std::cout << "SizeY: " << h << std::endl;
+		//std::cout << "size " << ptrGrabResult->GetBufferSize() << std::endl;
+		//std::cout << "dot " << (uint32_t)pImage[0] << std::endl;
+		
 		// 一度キャッシュ
 		const uint8_t* pImage = (uint8_t*)ptrGrabResult->GetBuffer();
-		std::cout << "dot " << (uint32_t)pImage[0] << std::endl;
 		image.CacheImage(w, h, 1, pImage);
-		//image->CopyToGpu(w, h, 1, pImage);
 	}
 }

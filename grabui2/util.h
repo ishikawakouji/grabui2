@@ -23,3 +23,4 @@ extern void PrintTime();
 extern int count255(size_t size, const uint8_t* pImageBuffer);
 
 extern int count_median255(uint32_t width, uint32_t height, const uint8_t* pImageBuffer);
+extern int mask_count_median255(uint32_t width, uint32_t height, const uint8_t* pImageBuffer);

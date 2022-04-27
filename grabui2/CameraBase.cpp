@@ -134,7 +134,7 @@ void CameraBase::popupConfig(const char* winname)
 		ImGui::Text("(500/1000)");
 		
 		ImGui::SameLine();
-		if (ImGui::InputDouble("exTime", &exposureTime, 0.0, 0.0, "%0.1f", ImGuiInputTextFlags_EnterReturnsTrue))
+		if (ImGui::InputDouble("exTime", &exposureTime, 1.0, 10.0, "%0.1f", ImGuiInputTextFlags_EnterReturnsTrue))
 		{
 			if (exposureTime > 1000.0f) {
 				exposureTime = 1000.0f;
@@ -153,7 +153,7 @@ void CameraBase::popupConfig(const char* winname)
 		switch (typeGain)
 		{
 		case GAIN_TYPE::GAIN_DOUBLE:
-			if (ImGui::InputDouble("dGain", &dGain, 0.0, 0.0, "%.1f", ImGuiInputTextFlags_EnterReturnsTrue))
+			if (ImGui::InputDouble("dGain", &dGain, 0.5, 1.0, "%.1f", ImGuiInputTextFlags_EnterReturnsTrue))
 			{
 				if (dGain > GetDoubleGainMax()) {
 					dGain = GetDoubleGainMax();
@@ -165,7 +165,7 @@ void CameraBase::popupConfig(const char* winname)
 			}
 			break;
 		case GAIN_TYPE::GAIN_INT64:
-			if (ImGui::InputInt("iGain", &iGain, 1, 100, ImGuiInputTextFlags_EnterReturnsTrue))
+			if (ImGui::InputInt("iGain", &iGain, 1, 10, ImGuiInputTextFlags_EnterReturnsTrue))
 			{
 				if (iGain > GetIntGainMax()) {
 					iGain = (int)GetIntGainMax();

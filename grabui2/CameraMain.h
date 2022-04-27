@@ -27,7 +27,7 @@ private:
 	bool flagExposureTimeValid;
 
 	// 255値になったピクセルの個数
-	int pixel255;
+	int pixel255 = 0;
 
 protected:
 	void preInit() {

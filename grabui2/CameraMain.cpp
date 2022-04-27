@@ -19,6 +19,10 @@ void CameraMain::Init()
 	//CameraBase::Init();
 
 	CameraBase::setNode();
+	
+	// 物理カメラ = とりあえずカラー
+	setPhysicalCamera();
+
 #if 0 // setNode
 	// デバイスオープン
 	// Open the camera for accessing the parameters.
@@ -51,8 +55,6 @@ void CameraMain::Init()
 	flagExposureTimeValid = doubleExposureTime.IsValid();
 #endif
 
-	// 255個数リセット
-	pixel255 = 0;
 
 }
 
@@ -128,18 +130,16 @@ void CameraMain::AfterGrabbing(const Pylon::CGrabResultPtr& ptrGrabResult)
 		// 画像の状態
 		uint32_t w = ptrGrabResult->GetWidth();
 		uint32_t h = ptrGrabResult->GetHeight();
-		std::cout << "SizeX: " << w << std::endl;
-		std::cout << "SizeY: " << h << std::endl;
+		//std::cout << "SizeX: " << w << std::endl;
+		//std::cout << "SizeY: " << h << std::endl;
 
 		// キャッシュする
 		const uint8_t* pImage = (uint8_t*)ptrGrabResult->GetBuffer();
 		image.CacheImage(w, h, 1, pImage);
-		//image->CopyToGpu(w, h, 1, pImage);
-
-		// 255カウント
-		setCount255(count_median255(w, h, pImage));
 
 		// 255調整
+		cout << "over255 " << count_median255(w, h, pImage) << endl; // 旧方式
+		setCount255(mask_count_median255(w, h, pImage));
 
 		// 保存
 		if (isSave()) {

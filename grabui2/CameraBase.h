@@ -11,6 +11,23 @@ using namespace Pylon;
 class CameraBase
 {
 private:
+	int minArea = 20000; // 確認するエリアの面積の最小値
+	int pixMinVal = 225; // 見る範囲を決めるときのピクセル値の最小値
+	double minExTime = 1000.0; // 露出時間の最小値
+	double maxExTime = 4000.0; // 露出時間の最大値
+
+public:
+	void setMinArea(int val) {
+		minArea = val;
+	}
+	void setPixMinVal(int val) {
+		pixMinVal = val;
+	}
+	void setExTime(double vmin, double vmax) {
+		minExTime = vmin;
+		maxExTime = vmax;
+	}
+private:
 	// 撮影中かどうか
 	bool fgrabbing = false;
 	 
@@ -20,6 +37,7 @@ private:
 	// 255カウント
 	bool fcount255 = false;
 	int count255 = 0;
+	bool fphysical = false;
 
 	// 255調整
 	bool ftune255 = false;
@@ -118,6 +136,15 @@ public:
 public:
 	// デバイスをアタッチ
 	virtual void AttachDevice(IPylonDevice* device) = 0;
+
+	// リアルカメラ
+	void setPhysicalCamera() {
+		image.setColorCamera();
+		fphysical = true;
+	}
+	bool isPhysicalCamera() {
+		return fphysical;
+	}
 
 #if 0
 	// イメージバッファをアタッチ

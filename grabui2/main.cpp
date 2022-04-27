@@ -351,6 +351,51 @@ int main(int, char**)
 
                 ImGui::Separator();
 
+                // 全体のゲイン固定ON/OFF
+                //ImGui::SameLine();
+                //ImGui::Checkbox(u8"全体ゲイン固定", &fixGain);
+
+                // カメラのゲイン自動調整のためのパラメータ設定
+                if (ImGui::Button(u8"ゲイン調整のパラメータ")) {
+                    ImGui::OpenPopup("auto gain parameter");
+                }
+                static int minArea = 20000; // 確認するエリアの面積の最小値
+                static int pixMinVal = 225; // 見る範囲を決めるときのピクセル値の最小値
+                static double minExTime = 1000.0; // 露出時間の最小値
+                static double maxExTime = 4000.0; // 露出時間の最大値
+
+                // パラメータの表示
+                char buf[128];
+                sprintf_s(buf, 128, "min area %d, min pix val %d, exposure time %.1f/%.1f", minArea, pixMinVal, minExTime, maxExTime);
+                ImGui::SameLine();
+                ImGui::Text(buf);
+
+                if (ImGui::BeginPopupModal("auto gain parameter")) {
+                    ImGui::InputInt(u8"確認エリアの最小面積", &minArea, 1, 10, ImGuiInputTextFlags_EnterReturnsTrue);
+                    if (ImGui::InputInt(u8"確認エリア抽出の閾値", &pixMinVal, 1, 1, ImGuiInputTextFlags_EnterReturnsTrue)) {
+                        if (pixMinVal < 1) pixMinVal = 1;
+                        if (pixMinVal > 254) pixMinVal = 254;
+                    }
+                    if (ImGui::InputDouble(u8"露出時間の最小値", &minExTime, 1.0, 10.0, "%.1f", ImGuiInputTextFlags_EnterReturnsTrue)) {
+                        if (minExTime < 900.0) minExTime = 900.0;
+                        if (minExTime > maxExTime) minExTime = maxExTime;
+                    }
+                    if (ImGui::InputDouble(u8"露出時間の最大値", &maxExTime, 1.0, 10.0, "%.1f", ImGuiInputTextFlags_EnterReturnsTrue)) {
+                        if (maxExTime < minExTime) maxExTime = minExTime;
+                        if (maxExTime > 4100.0) maxExTime = 4100.0;
+                    }
+
+                    if (ImGui::Button("OK")) {
+                        ImGui::CloseCurrentPopup();
+                    }
+                    ImGui::EndPopup();
+                }
+                for (int i = 0; i < cameraArrNum; ++i) {
+                    cameraArr[i]->setMinArea(minArea);
+                    cameraArr[i]->setPixMinVal(pixMinVal);
+                    cameraArr[i]->setExTime(minExTime, maxExTime);
+                }
+
                 // カメラの情報を表示
                 ImGui::BeginTable("cameras", 6); {
                     for (size_t i = 0; i < cameraArrNum; ++i)
@@ -386,9 +431,6 @@ int main(int, char**)
                 // 撮影開始、停止ボタン
                 ImGui::Checkbox(u8"撮影", &runGrab);
 
-                // 全体のゲイン固定ON/OFF
-                ImGui::SameLine();
-                ImGui::Checkbox(u8"全体ゲイン固定", &fixGain);
 
                 // このウィンドウの高さを持つ
                 infoh = ImGui::GetWindowHeight();
