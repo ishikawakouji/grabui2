@@ -4,6 +4,9 @@
 class CameraMain : public CameraBase
 {
 private:
+	bool fisMain = true;
+	bool fcanTrigger = true;
+#if 0
 	// ゲインのノードタイプ
 	enum class GAIN_TYPE {
 		GAIN_DOUBLE,
@@ -14,20 +17,31 @@ private:
 
 	// ゲインのノード、double
 	Pylon::CFloatParameter doubleGain;
-	double doubleGainMax;
-	double doubleGainMin;
+	double doubleGainMax = 0.0;
+	double doubleGainMin = 0.0;
 
 	// ゲインのノード、long long (int64_t)
 	Pylon::CIntegerParameter intGain;
-	int64_t intGainMax;
-	int64_t intGainMin;
+	int64_t intGainMax = 0;
+	int64_t intGainMin = 0;
 
 	// 露出時間のノード
 	Pylon::CFloatParameter doubleExposureTime;
-	bool flagExposureTimeValid;
+	bool flagExposureTimeValid = false;
+#endif
 
 	// 255値になったピクセルの個数
 	int pixel255 = 0;
+
+public:
+	void unsetMain() { fisMain = false; }
+	bool isMain() { return fisMain;  }
+
+	void setTrigger() {
+		fcanTrigger = true;
+	}
+	void unsetTrigger() { fcanTrigger = false; }
+	bool canTrigger() { return fcanTrigger; }
 
 protected:
 	void preInit() {

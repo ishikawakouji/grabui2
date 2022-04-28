@@ -393,7 +393,7 @@ int main(int, char**)
                 for (int i = 0; i < cameraArrNum; ++i) {
                     cameraArr[i]->setMinArea(minArea);
                     cameraArr[i]->setPixMinVal(pixMinVal);
-                    cameraArr[i]->setExTime(minExTime, maxExTime);
+                    cameraArr[i]->setExTimeRange(minExTime, maxExTime);
                 }
 
                 // カメラの情報を表示
@@ -447,6 +447,15 @@ int main(int, char**)
                 for (int i = 0; i < cameraArrNum; ++i) {
                     cameraArr[i]->StopGrabbing();
                 }
+            }
+
+            // 全員の処理が終っていたらソフトトリガ
+            bool afterGrabFinished = true;
+            for (int i = 0; i < cameraArrNum; ++i) {
+                afterGrabFinished = afterGrabFinished && (!cameraArr[i]->isAfterGrabbing());
+            }
+            if (afterGrabFinished) {
+                ((CameraMain*)cameraArr[0])->setTrigger();
             }
 
             // 絵を表示

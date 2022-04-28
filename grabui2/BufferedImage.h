@@ -66,6 +66,8 @@ public:
     }
 
     void CacheImage(int cols, int rows, int channel, const unsigned char* data) {
+        size_t datalen = (long)cols * (long)rows;
+
         // Ç±Ç±Ç…óàÇÈÇ∆Ç´ÇÕÅAÇ‹ÇæîíçïÇ≈ÇÊÇ¢
         if (cols != width || rows != height) {
             free(localbuf);
@@ -73,9 +75,9 @@ public:
             width = cols;
             height = rows;
 
-            localbuf = (unsigned char*)malloc(width * height);
+            localbuf = (unsigned char*)malloc(datalen);
         }
-        memcpy_s(localbuf, width * height, data, cols * rows);
+        memcpy_s(localbuf, datalen, data, datalen);
         enable = true;
     }
 

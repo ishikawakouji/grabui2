@@ -71,7 +71,7 @@ public:
 
 		// 露光時間の指定（0の場合は変更しない
 		SetValue<CEnumParameter, const char*>(nodemap, "ExposureMode", "Timed");
-		SetValue<CFloatParameter, double>(nodemap, "ExposureTime", 1000.0);
+		//SetValue<CFloatParameter, double>(nodemap, "ExposureTime", 1000.0);
 
 		// ピクセルフォーマット
 		SetValue<CEnumParameter, const char*>(nodemap, "PixelFormat", "BayerRG8");

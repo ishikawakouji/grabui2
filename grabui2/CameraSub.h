@@ -10,6 +10,10 @@ public:
 		this->camera.Attach(device);
 
 		preInit();
+
+		// “à•”ƒgƒŠƒK‚ğg‚í‚È‚¢
+		unsetMain();
+
 		setConfig();
 
 		Init();

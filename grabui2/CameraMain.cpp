@@ -74,7 +74,7 @@ void threadMainGrabbing(CameraMain* caller)
 		while (true)
 		{
 			// シャッター待ち
-			Sleep(1000);
+			Sleep(caller->getWaitTime());
 
 			if (!caller->isGrabbing()) {
 				break;
@@ -82,7 +82,8 @@ void threadMainGrabbing(CameraMain* caller)
 
 			// シャッタートリガ
 			// Execute the software trigger. Wait up to 1000 ms for the camera to be ready for trigger.
-			if (caller->WaitForFrameTriggerReady(100, Pylon::TimeoutHandling_ThrowException))
+			bool hoge = caller->canTrigger();
+			if (caller->canTrigger() &&  caller->WaitForFrameTriggerReady(100, Pylon::TimeoutHandling_ThrowException))
 			{
 				caller->ExecuteSoftwareTrigger();
 			}
@@ -106,8 +107,10 @@ void CameraMain::StartGrabbing()
 		// 撮影中
 		setGrabbing();
 
-		std::thread th(threadMainGrabbing, this);
-		th.detach();
+		if (fisMain) {
+			std::thread th(threadMainGrabbing, this);
+			th.detach();
+		}
 	}
 	catch (const Pylon::GenericException& e)
 	{
@@ -119,13 +122,24 @@ void CameraMain::StartGrabbing()
 
 void CameraMain::AfterGrabbing(const Pylon::CGrabResultPtr& ptrGrabResult)
 {
+	// 撮影後処理中
+	setAfterGrabbing();
+	unsetTrigger();
+
 	if (!ptrGrabResult->GrabSucceeded()) {
 		// データ取得失敗
 		std::cout << "Error: " << ptrGrabResult->GetErrorCode() << " " << ptrGrabResult->GetErrorDescription() << std::endl;
 	}
 	else {
+		// 撮影時の情報を収集
+		string devName = camera.GetDeviceInfo().GetSerialNumber().c_str();
+		string timeStamp;
+		GetTimeString(&timeStamp);
+		string gainStr = getGainString();
+		string exTimeStr = getExposureString();
+
 		// データ取得した
-		PrintTime();
+		//PrintTime();
 
 		// 画像の状態
 		uint32_t w = ptrGrabResult->GetWidth();
@@ -143,12 +157,6 @@ void CameraMain::AfterGrabbing(const Pylon::CGrabResultPtr& ptrGrabResult)
 
 		// 保存
 		if (isSave()) {
-			string devName = camera.GetDeviceInfo().GetSerialNumber().c_str();
-			string timeStamp;
-			GetTimeString(&timeStamp);
-			string gainStr = getGainString();
-			string exTimeStr = getExposureString();
-
 			string filename = devName + "_" + timeStamp + "_G" + gainStr + "_" + exTimeStr + ".png";
 			if (filename.length() < FILE_NAME_LEN) {
 				setSaveFileName(filename.c_str());
@@ -162,4 +170,6 @@ void CameraMain::AfterGrabbing(const Pylon::CGrabResultPtr& ptrGrabResult)
 		}
 
 	}
+
+	unsetAfterGrabbing();
 }

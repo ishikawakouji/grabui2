@@ -10,22 +10,47 @@ using namespace Pylon;
 
 class CameraBase
 {
+public:
+	// camera main との整合を取るため
+	bool isMain() { return true; }
 private:
-	int minArea = 20000; // 確認するエリアの面積の最小値
+	// ゲイン調整に必要なパラメータ
+	int minWaitTime = 50; // 最低撮影間隔 ms
+	int minArea = 20000; // 確認するエリアの面積の最小値 pixcels
 	int pixMinVal = 225; // 見る範囲を決めるときのピクセル値の最小値
-	double minExTime = 1000.0; // 露出時間の最小値
-	double maxExTime = 4000.0; // 露出時間の最大値
+	double minExTime = 1000.0; // 露出時間の最小値 usec
+	double maxExTime = 4000.0; // 露出時間の最大値 usec
+
+	// 計算中かどうか
+	bool runningAfterGrabbing = false;
 
 public:
+	// パラメータの入出力
+	void setWaitTime(int val) {
+		minWaitTime = val;
+	}
+	int getWaitTime() {
+		return minWaitTime;
+	}
 	void setMinArea(int val) {
 		minArea = val;
 	}
 	void setPixMinVal(int val) {
 		pixMinVal = val;
 	}
-	void setExTime(double vmin, double vmax) {
+	void setExTimeRange(double vmin, double vmax) {
 		minExTime = vmin;
 		maxExTime = vmax;
+	}
+
+	void setAfterGrabbing() {
+		runningAfterGrabbing = true;
+	}
+	void unsetAfterGrabbing() {
+		runningAfterGrabbing = false;
+	}
+	bool isAfterGrabbing() {
+		return runningAfterGrabbing;
 	}
 private:
 	// 撮影中かどうか

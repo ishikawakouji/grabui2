@@ -131,16 +131,18 @@ void CameraBase::popupConfig(const char* winname)
 
 		// ˜IoŽžŠÔ’²®
 		ImGui::Text(u8"˜IoŽžŠÔ"); ImGui::SameLine();
-		ImGui::Text("(500/1000)");
+		char buf[64];
+		sprintf_s(buf, 64, "%.1f/%.1f", minExTime, maxExTime);
+		ImGui::Text(buf);
 		
 		ImGui::SameLine();
 		if (ImGui::InputDouble("exTime", &exposureTime, 1.0, 10.0, "%0.1f", ImGuiInputTextFlags_EnterReturnsTrue))
 		{
-			if (exposureTime > 1000.0f) {
-				exposureTime = 1000.0f;
+			if (exposureTime > maxExTime) {
+				exposureTime = maxExTime;
 			}
-			if (exposureTime < 500.0f) {
-				exposureTime = 500.0f;
+			if (exposureTime < minExTime) {
+				exposureTime = minExTime;
 			}
 			SetDoubleExposureTime(exposureTime);
 		}

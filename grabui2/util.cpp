@@ -57,7 +57,7 @@ void AddString(string* inout, char* format, float val) {
 void PrintTime() {
     string buf;
     GetTimeString(&buf);
-    //cout << buf << endl;
+    cout << buf << endl;
 }
 
 /**
