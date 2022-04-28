@@ -37,10 +37,10 @@ public:
 	void unsetMain() { fisMain = false; }
 	bool isMain() { return fisMain;  }
 
-	void setTrigger() {
+	void continueTrigger() {
 		fcanTrigger = true;
 	}
-	void unsetTrigger() { fcanTrigger = false; }
+	void suspendTrigger() { fcanTrigger = false; }
 	bool canTrigger() { return fcanTrigger; }
 
 protected:

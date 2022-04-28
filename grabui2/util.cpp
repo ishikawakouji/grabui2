@@ -147,6 +147,229 @@ int count_median255(uint32_t width, uint32_t height, const uint8_t* pImageBuffer
 	return pix;
 }
 
+// 中央値で、既定の大きさ以上の塊の中の最大値が225-254に収まるように制御
+int mask_median255_gain_tune(uint32_t width, uint32_t height, const uint8_t* pImageBuffer, CameraMain* pCamera)
+{
+	// 画面全体の255オーバー画素数
+	int pix = 0;
+
+	// 値を集める
+	uint8_t arr[9];
+	int idx = 0;
+
+	// 中央値イメージ
+	cv::Mat medianImg = cv::Mat::zeros(height, width, CV_8UC1);
+
+	// GR のブロックを一度に見るので 2つずつ移動
+	// BG
+	for (uint32_t h = 2; h < height - 2; h += 2) {
+		for (uint32_t w = 2; w < width - 2; w += 2) {
+
+			// G1
+			idx = 0;
+			int G = width * h + w;
+			arr[idx++] = pImageBuffer[G - 2 * width];
+			arr[idx++] = pImageBuffer[G - width + 1];
+			arr[idx++] = pImageBuffer[G - width - 1];
+			arr[idx++] = pImageBuffer[G - 2];
+			arr[idx++] = pImageBuffer[G];
+			arr[idx++] = pImageBuffer[G + 2];
+			arr[idx++] = pImageBuffer[G + width - 1];
+			arr[idx++] = pImageBuffer[G + width + 1];
+			arr[idx++] = pImageBuffer[G + 2 * width];
+
+			std::sort(arr, arr + idx);
+			if (arr[4] == 255) ++pix;
+			medianImg.data[G] = arr[4];
+
+			// R
+			idx = 0;
+			int R = G + 1;
+			arr[idx++] = pImageBuffer[R - 2 * width];
+			arr[idx++] = pImageBuffer[R - 2 * width - 2];
+			arr[idx++] = pImageBuffer[R - 2 * width + 2];
+			arr[idx++] = pImageBuffer[R - 2] == 255;
+			arr[idx++] = pImageBuffer[R];
+			arr[idx++] = pImageBuffer[R + 2];
+			arr[idx++] = pImageBuffer[R + 2 * width - 2];
+			arr[idx++] = pImageBuffer[R + 2 * width + 2];
+			arr[idx++] = pImageBuffer[R + 2 * width];
+
+			std::sort(arr, arr + idx);
+			if (arr[4] == 255) ++pix;
+			medianImg.data[R] = arr[4];
+
+			// B
+			idx = 0;
+			int B = G + width;
+			arr[idx++] = pImageBuffer[B - 2 * width];
+			arr[idx++] = pImageBuffer[B - 2 * width - 2];
+			arr[idx++] = pImageBuffer[B - 2 * width + 2];
+			arr[idx++] = pImageBuffer[B - 2];
+			arr[idx++] = pImageBuffer[B];
+			arr[idx++] = pImageBuffer[B + 2];
+			arr[idx++] = pImageBuffer[B + 2 * width - 2];
+			arr[idx++] = pImageBuffer[B + 2 * width + 2];
+			arr[idx++] = pImageBuffer[B + 2 * width];
+
+			std::sort(arr, arr + idx);
+			if (arr[4] == 255) ++pix;
+			medianImg.data[B] = arr[4];
+
+			// G2
+			idx = 0;
+			G = B + 1;
+			arr[idx++] = pImageBuffer[G - 2 * width];
+			arr[idx++] = pImageBuffer[G - width + 1];
+			arr[idx++] = pImageBuffer[G - width - 1];
+			arr[idx++] = pImageBuffer[G - 2];
+			arr[idx++] = pImageBuffer[G];
+			arr[idx++] = pImageBuffer[G + 2];
+			arr[idx++] = pImageBuffer[G + width - 1];
+			arr[idx++] = pImageBuffer[G + width + 1];
+			arr[idx++] = pImageBuffer[G + 2 * width];
+
+			std::sort(arr, arr + idx);
+			if (arr[4] == 255) ++pix;
+			medianImg.data[G] = arr[4];
+
+		} // width + 2
+	} // height + 2
+
+	//cv::imwrite(string("median_image.png"), medianImg);
+
+	// 二値化
+	cv::Mat binImg = cv::Mat::zeros(medianImg.size(), CV_8UC1);
+	cv::threshold(medianImg, binImg, 200.0, 255.0, cv::THRESH_BINARY);
+
+	// 塊抽出
+	vector< vector<cv::Point> > contours;
+	vector<cv::Vec4i> hierarchy;
+	cv::findContours(binImg, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
+	
+	// 最大の輪郭
+	double area = 0.0;
+	int area1st = 0;
+	{
+		int i = 0;
+		for (vector< vector<cv::Point> >::iterator x = contours.begin(); x != contours.end(); ++x) {
+			double a = cv::contourArea(*x);
+			if (area < a) {
+				area = a;
+				area1st = i;
+			}
+			++i;
+		}
+	}
+
+	// 最大の輪郭でマスクを作る
+	cv::Mat maskImg = cv::Mat::zeros(medianImg.size(), CV_8UC1);
+	cv::drawContours(maskImg, contours, area1st, cv::Scalar(255), cv::FILLED);
+
+	// マスク処理
+	cv::Mat resImg = cv::Mat::zeros(medianImg.size(), CV_8UC1);
+	medianImg.copyTo(resImg, maskImg);
+
+	// 255要素取り出し
+	cv::Mat elem255 = (resImg == 255) * 255;
+	int num255 = cv::countNonZero(elem255);
+
+	if (num255 == 0) {
+		// 既定の中に入っているか
+		cv::Mat over225 = resImg >= 225;
+		int num225 = cv::countNonZero(over225);
+
+		if (num225 != 0) {
+			// 225以上が存在するのでおわり
+			return num255;
+		}
+		else {
+			// ゲインを下げすぎ
+		}
+
+	}
+	else {
+		// ゲイン上げすぎ
+	}
+
+	return num255;
+}
+
+// 周囲を見て中央値が255になるものをカウント
+int count_median255(uint32_t width, uint32_t height, const uint8_t* pImageBuffer) {
+	int pix = 0;
+
+	// GR のブロックを一度に見るので 2つずつ移動
+	// BG
+	for (uint32_t h = 2; h < height - 2; h += 2) {
+		for (uint32_t w = 2; w < width - 2; w += 2) {
+
+			// G1
+			int count = 0;
+			int G = width * h + w;
+			if (pImageBuffer[G - 2 * width] == 255) ++count;
+			if (pImageBuffer[G - width + 1] == 255) ++count;
+			if (pImageBuffer[G - width - 1] == 255) ++count;
+			if (pImageBuffer[G - 2] == 255) ++count;
+			if (pImageBuffer[G] == 255) ++count;
+			if (pImageBuffer[G + 2] == 255) ++count;
+			if (pImageBuffer[G + width - 1] == 255) ++count;
+			if (pImageBuffer[G + width + 1] == 255) ++count;
+			if (pImageBuffer[G + 2 * width] == 255) ++count;
+
+			if (count > 4) ++pix;
+
+			// R
+			count = 0;
+			int R = G + 1;
+			if (pImageBuffer[R - 2 * width] == 255) ++count;
+			if (pImageBuffer[R - 2 * width - 2] == 255) ++count;
+			if (pImageBuffer[R - 2 * width + 2] == 255) ++count;
+			if (pImageBuffer[R - 2] == 255) ++count;
+			if (pImageBuffer[R] == 255) ++count;
+			if (pImageBuffer[R + 2] == 255) ++count;
+			if (pImageBuffer[R + 2 * width - 2] == 255) ++count;
+			if (pImageBuffer[R + 2 * width + 2] == 255) ++count;
+			if (pImageBuffer[R + 2 * width] == 255) ++count;
+
+			if (count > 4) ++pix;
+
+			// B
+			count = 0;
+			int B = G + width;
+			if (pImageBuffer[B - 2 * width] == 255) ++count;
+			if (pImageBuffer[B - 2 * width - 2] == 255) ++count;
+			if (pImageBuffer[B - 2 * width + 2] == 255) ++count;
+			if (pImageBuffer[B - 2] == 255) ++count;
+			if (pImageBuffer[B] == 255) ++count;
+			if (pImageBuffer[B + 2] == 255) ++count;
+			if (pImageBuffer[B + 2 * width - 2] == 255) ++count;
+			if (pImageBuffer[B + 2 * width + 2] == 255) ++count;
+			if (pImageBuffer[B + 2 * width] == 255) ++count;
+
+			if (count > 4) ++pix;
+
+			// G2
+			count = 0;
+			G = B + 1;
+			if (pImageBuffer[G - 2 * width] == 255) ++count;
+			if (pImageBuffer[G - width + 1] == 255) ++count;
+			if (pImageBuffer[G - width - 1] == 255) ++count;
+			if (pImageBuffer[G - 2] == 255) ++count;
+			if (pImageBuffer[G] == 255) ++count;
+			if (pImageBuffer[G + 2] == 255) ++count;
+			if (pImageBuffer[G + width - 1] == 255) ++count;
+			if (pImageBuffer[G + width + 1] == 255) ++count;
+			if (pImageBuffer[G + 2 * width] == 255) ++count;
+
+			if (count > 4) ++pix;
+
+		} // width + 2
+	} // height + 2
+
+	return pix;
+}
+
 // 見たいところについて、周囲を見て中央値が255になるものをカウント
 int mask_count_median255(uint32_t width, uint32_t height, const uint8_t* pImageBuffer) {
 	int pix = 0;
@@ -244,7 +467,7 @@ int mask_count_median255(uint32_t width, uint32_t height, const uint8_t* pImageB
 	vector< vector<cv::Point> > contours;
 	vector<cv::Vec4i> hierarchy;
 	cv::findContours(binImg, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
-	
+
 	// 最大の輪郭
 	double area = 0.0;
 	int area1st = 0;

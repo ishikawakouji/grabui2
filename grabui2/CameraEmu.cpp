@@ -118,7 +118,7 @@ void CameraEmu::AfterGrabbing(const Pylon::CGrabResultPtr& ptrGrabResult)
 	}
 	else {
 		// ƒf[ƒ^æ“¾‚µ‚½
-		PrintTime();
+		//PrintTime();
 
 		//Pylon::DisplayImage(1, ptrGrabResult);
 

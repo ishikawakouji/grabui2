@@ -455,7 +455,7 @@ int main(int, char**)
                 afterGrabFinished = afterGrabFinished && (!cameraArr[i]->isAfterGrabbing());
             }
             if (afterGrabFinished) {
-                ((CameraMain*)cameraArr[0])->setTrigger();
+                ((CameraMain*)cameraArr[0])->continueTrigger();
             }
 
             // ŠG‚ð•\Ž¦
