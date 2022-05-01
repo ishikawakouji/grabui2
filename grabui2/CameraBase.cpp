@@ -138,13 +138,7 @@ void CameraBase::popupConfig(const char* winname)
 		ImGui::SameLine();
 		if (ImGui::InputDouble("exTime", &exposureTime, 1.0, 10.0, "%0.1f", ImGuiInputTextFlags_EnterReturnsTrue))
 		{
-			if (exposureTime > maxExTime) {
-				exposureTime = maxExTime;
-			}
-			if (exposureTime < minExTime) {
-				exposureTime = minExTime;
-			}
-			SetDoubleExposureTime(exposureTime);
+			exposureTime = SetDoubleExposureTime(exposureTime);
 		}
 
 		// ƒQƒCƒ“’²®
@@ -157,25 +151,13 @@ void CameraBase::popupConfig(const char* winname)
 		case GAIN_TYPE::GAIN_DOUBLE:
 			if (ImGui::InputDouble("dGain", &dGain, 0.5, 1.0, "%.1f", ImGuiInputTextFlags_EnterReturnsTrue))
 			{
-				if (dGain > GetDoubleGainMax()) {
-					dGain = GetDoubleGainMax();
-				}
-				if (dGain < GetDoubleGainMin()) {
-					dGain = GetDoubleGainMin();
-				}
-				SetDoubleGain(dGain);
+				dGain = SetDoubleGain(dGain);
 			}
 			break;
 		case GAIN_TYPE::GAIN_INT64:
 			if (ImGui::InputInt("iGain", &iGain, 1, 10, ImGuiInputTextFlags_EnterReturnsTrue))
 			{
-				if (iGain > GetIntGainMax()) {
-					iGain = (int)GetIntGainMax();
-				}
-				if (iGain < GetIntGainMin()) {
-					iGain = (int)GetIntGainMin();
-				}
-				SetIntGain(iGain);
+				iGain = SetIntGain(iGain);
 			}
 			break;
 		default:

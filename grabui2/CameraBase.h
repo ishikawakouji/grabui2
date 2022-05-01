@@ -206,13 +206,21 @@ public:
 	int64_t GetIntGain() { return intGainCache; }
 	double GetDoubleGain() { return doubleGainCache; }
 
-	void SetIntGain(int64_t val) {
+	int64_t SetIntGain(int64_t val) {
+		if (val < intGainMin) val = intGainMin;
+		if (val > intGainMax) val = intGainMax;
+
 		intGain.SetValue(val);
 		intGainCache = val;
+		return val;
 	}
-	void SetDoubleGain(double val) {
+	double SetDoubleGain(double val) {
+		if (val < doubleGainMin) val = doubleGainMin;
+		if (val > doubleGainMax) val = doubleGainMax;
+
 		doubleGain.SetValue(val);
 		doubleGainCache = val;
+		return val;
 	}
 
 	int64_t GetIntGainMax() { return intGainMax; }
@@ -228,11 +236,15 @@ public:
 		}
 		return 1000.0;
 	}
-	void SetDoubleExposureTime(double val) {
+	double SetDoubleExposureTime(double val) {
+		if (val < minExTime) val = minExTime;
+		if (val > maxExTime) val = maxExTime;
+
 		if (flagExposureTimeValid) {
 			doubleExposureTime.SetValue(val);
 			exposureTimeCache = val;
 		}
+		return val;
 	}
 
 	// •\Ž¦—p
