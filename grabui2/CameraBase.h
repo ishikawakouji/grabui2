@@ -41,6 +41,9 @@ public:
 	void setPixMinVal(int val) {
 		pixMinVal = val;
 	}
+	int getPixMinVal() {
+		return pixMinVal;
+	}
 	void setExTimeRange(double vmin, double vmax) {
 		minExTime = vmin;
 		maxExTime = vmax;
