@@ -199,12 +199,16 @@ public:
 
 	// open/close
 	void CameraOpen() {
-		camera.Open();
-		setOpen();
+		if (!isOpen()) {
+			camera.Open();
+			setOpen();
+		}
 	}
 	void CameraClose() {
-		camera.Close();
-		unsetOpen();
+		if (isOpen()) {
+			camera.Close();
+			unsetOpen();
+		}
 	}
 
 	// grab スレッド起動、終了
@@ -213,6 +217,7 @@ public:
 		if (!isGrabbing()) {
 			return;
 		}
+		camera.StopGrabbing();
 		unsetGrabbing();
 		//camera.Close();
 	}
@@ -235,16 +240,26 @@ public:
 		if (val < intGainMin) val = intGainMin;
 		if (val > intGainMax) val = intGainMax;
 
-		intGain.SetValue(val);
-		intGainCache = val;
+		if (isOpen()) {
+			intGain.SetValue(val);
+			intGainCache = val;
+		}
+		else {
+			val = intGainCache;
+		}
 		return val;
 	}
 	double SetDoubleGain(double val) {
 		if (val < doubleGainMin) val = doubleGainMin;
 		if (val > doubleGainMax) val = doubleGainMax;
 
-		doubleGain.SetValue(val);
-		doubleGainCache = val;
+		if (isOpen()) {
+			doubleGain.SetValue(val);
+			doubleGainCache = val;
+		}
+		else {
+			val = doubleGainCache;
+		}
 		return val;
 	}
 
@@ -265,9 +280,14 @@ public:
 		if (val < minExTime) val = minExTime;
 		if (val > maxExTime) val = maxExTime;
 
-		if (flagExposureTimeValid) {
-			doubleExposureTime.SetValue(val);
-			exposureTimeCache = val;
+		if (isOpen()) {
+			if (flagExposureTimeValid) {
+				doubleExposureTime.SetValue(val);
+				exposureTimeCache = val;
+			}
+		}
+		else {
+			val = exposureTimeCache;
 		}
 		return val;
 	}

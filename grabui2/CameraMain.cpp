@@ -17,6 +17,7 @@ void CameraMain::Init()
 {
 	// preInit‚Å‚â‚Á‚Ä‚¢‚é
 	//CameraBase::Init();
+	CameraOpen();
 
 	CameraBase::setNode();
 	
