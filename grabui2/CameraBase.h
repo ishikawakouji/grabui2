@@ -24,6 +24,9 @@ private:
 	// 計算中かどうか
 	bool runningAfterGrabbing = false;
 
+	// 自動ゲイン調整を実行するかどうか
+	bool fdoAutoGainTune = false;
+
 public:
 	// パラメータの入出力
 	void setWaitTime(int val) {
@@ -57,6 +60,12 @@ public:
 	}
 	bool isAfterGrabbing() {
 		return runningAfterGrabbing;
+	}
+	void setAutoGainTune(bool val) {
+		fdoAutoGainTune = val;
+	}
+	bool doAutoGainTune() {
+		return fdoAutoGainTune;
 	}
 private:
 	// オープンしているかどうか

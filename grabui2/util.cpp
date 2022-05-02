@@ -274,10 +274,15 @@ int mask_median255_gain_tune(uint32_t width, uint32_t height, const uint8_t* pIm
 	cv::Mat elem255 = (resImg == 255) * 255;
 	int num255 = cv::countNonZero(elem255);
 
+	// ©“®ƒQƒCƒ“’²®‚·‚é‚©‚Ç‚¤‚©
+	if (!pCamera->doAutoGainTune()) {
+		return num255;
+	}
+
 	// 255ˆÈã‚ª‚ ‚Á‚½‚çƒQƒCƒ“‚ğ‰º‚°‚é
 	if (num255 > 0) {
 		int minarea = pCamera->getMinArea();
-		double howmuch = (double)(int)(num255 / minarea);
+		double howmuch = (double)(int)(num255 / minarea) * 0.5;
 
 		double gain = pCamera->GetDoubleGain();
 		double nextgain = gain - (howmuch + 1.0) * 0.5;
@@ -300,7 +305,7 @@ int mask_median255_gain_tune(uint32_t width, uint32_t height, const uint8_t* pIm
 	cv::Mat over225 = (resImg >= pixminval) * 255;
 	int num225 = cv::countNonZero(over225);
 
-	if (num225 != 0) {
+	if (num225 > 0) {
 		// 225ˆÈã‚ª‘¶İ‚·‚é‚Ì‚Å‚¨‚í‚è
 		return num255;
 	}

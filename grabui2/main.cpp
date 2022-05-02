@@ -431,6 +431,13 @@ int main(int, char**)
                 // B‰eŠJnA’â~ƒ{ƒ^ƒ“
                 ImGui::Checkbox(u8"B‰e", &runGrab);
 
+                // ©“®ƒQƒCƒ“’²®‚Ìˆê’â~
+                static bool dontAutoGainTune = true;
+                ImGui::SameLine();
+                ImGui::Checkbox(u8"©“®ƒQƒCƒ“ˆê’â~", &dontAutoGainTune);
+                for (int i = 0; i < cameraArrNum; ++i) {
+                    cameraArr[i]->setAutoGainTune(!dontAutoGainTune);
+                }
 
                 // ‚±‚ÌƒEƒBƒ“ƒhƒE‚Ì‚‚³‚ğ‚Â
                 infoh = ImGui::GetWindowHeight();
