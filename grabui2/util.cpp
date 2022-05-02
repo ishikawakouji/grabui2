@@ -274,23 +274,47 @@ int mask_median255_gain_tune(uint32_t width, uint32_t height, const uint8_t* pIm
 	cv::Mat elem255 = (resImg == 255) * 255;
 	int num255 = cv::countNonZero(elem255);
 
-	if (num255 == 0) {
-		// Šù’è‚Ì’†‚É“ü‚Á‚Ä‚¢‚é‚©
-		cv::Mat over225 = resImg >= 225;
-		int num225 = cv::countNonZero(over225);
+	// 255ˆÈã‚ª‚ ‚Á‚½‚çƒQƒCƒ“‚ğ‰º‚°‚é
+	if (num255 > 0) {
+		double gain = pCamera->GetDoubleGain();
+		double nextgain = gain - 0.5;
+		nextgain = pCamera->SetDoubleGain(nextgain);
+		
+		// ƒQƒCƒ“‚Í‰ºŒÀ
+		if (nextgain == gain) {
+			// ˜IoŠÔ‚Å’²®
+			double extime = pCamera->GetDoubleExposureTime();
+			double nextextime = extime * 0.9;
+			nextextime = pCamera->SetDoubleExposureTime(nextextime);
 
-		if (num225 != 0) {
-			// 225ˆÈã‚ª‘¶İ‚·‚é‚Ì‚Å‚¨‚í‚è
-			return num255;
+			// ˜IoŠÔ‚à‰ºŒÀ‚È‚çd•û‚ª‚È‚¢
 		}
-		else {
-			// ƒQƒCƒ“‚ğ‰º‚°‚·‚¬
-		}
+		return num255;
+	}
 
+	// Šù’è‚Ì’†‚É“ü‚Á‚Ä‚¢‚é‚©
+	cv::Mat over225 = (resImg >= 225) * 255;
+	int num225 = cv::countNonZero(over225);
+
+	if (num225 != 0) {
+		// 225ˆÈã‚ª‘¶İ‚·‚é‚Ì‚Å‚¨‚í‚è
+		return num255;
 	}
-	else {
-		// ƒQƒCƒ“ã‚°‚·‚¬
+
+	// ƒQƒCƒ“‚ğ‰º‚°‚·‚¬
+	double extime = pCamera->GetDoubleExposureTime();
+	double nextextime = extime * 1.1;
+	nextextime = pCamera->SetDoubleExposureTime(nextextime);
+
+	// ˜IoŠÔ‚ªãŒÀ‚È‚çƒQƒCƒ“‚ğ•ÏX
+	if (extime == nextextime) {
+		double gain = pCamera->GetDoubleGain();
+		double nextgain = gain + 0.5;
+		nextgain = pCamera->SetDoubleGain(nextgain);
+
+		// ƒQƒCƒ“‚àãŒÀ‚È‚çd•û‚È‚¢
 	}
+
 
 	return num255;
 }
