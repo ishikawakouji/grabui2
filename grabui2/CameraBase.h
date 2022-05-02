@@ -56,6 +56,9 @@ public:
 		return runningAfterGrabbing;
 	}
 private:
+	// オープンしているかどうか
+	bool fopen = false;
+
 	// 撮影中かどうか
 	bool fgrabbing = false;
 	 
@@ -88,6 +91,15 @@ public:
 	}
 
 public:
+	// カメラオープン
+	bool isOpen() {
+		return fopen;
+	}
+	void setOpen() { fopen = true; }
+	void unsetOpen() {
+		fopen = false;
+	}
+
 	// 撮影中フラグ
 	bool isGrabbing() { return fgrabbing; }
 	void setGrabbing() { fgrabbing = true; }
@@ -182,7 +194,17 @@ public:
 #endif
 
 	~CameraBase() {
-		StopGrabbing();
+		CameraClose();
+	}
+
+	// open/close
+	void CameraOpen() {
+		camera.Open();
+		setOpen();
+	}
+	void CameraClose() {
+		camera.Close();
+		unsetOpen();
 	}
 
 	// grab スレッド起動、終了
@@ -192,7 +214,7 @@ public:
 			return;
 		}
 		unsetGrabbing();
-		camera.Close();
+		//camera.Close();
 	}
 
 	void setNode();

@@ -3,7 +3,7 @@
 void CameraBase::setNode()
 {
 	// カメラオープン
-	camera.Open();
+	//camera.Open();
 
 	// 露出時間
 	doubleExposureTime.Attach(camera.GetNodeMap().GetNode("ExposureTime"));

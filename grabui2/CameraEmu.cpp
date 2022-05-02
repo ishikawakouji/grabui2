@@ -46,7 +46,7 @@ void CameraEmu::Init()
 
 	// デバイスオープン
 	// Open the camera for accessing the parameters.
-	//camera.Open();
+	CameraOpen();
 
 	CameraBase::setNode();
 }
