@@ -276,8 +276,11 @@ int mask_median255_gain_tune(uint32_t width, uint32_t height, const uint8_t* pIm
 
 	// 255ˆÈã‚ª‚ ‚Á‚½‚çƒQƒCƒ“‚ğ‰º‚°‚é
 	if (num255 > 0) {
+		int minarea = pCamera->getMinArea();
+		double howmuch = (double)(int)(num255 / minarea);
+
 		double gain = pCamera->GetDoubleGain();
-		double nextgain = gain - 0.5;
+		double nextgain = gain - (howmuch + 1.0) * 0.5;
 		nextgain = pCamera->SetDoubleGain(nextgain);
 		
 		// ƒQƒCƒ“‚Í‰ºŒÀ
