@@ -303,7 +303,7 @@ int mask_median255_gain_tune(uint32_t width, uint32_t height, const uint8_t* pIm
 	}
 
 	// ƒQƒCƒ“‚ð‰º‚°‚·‚¬
-	double maxval = 0.0;
+	double maxval = 255.0;
 	cv::minMaxIdx(resImg, NULL, &maxval);
 
 	double extime = pCamera->GetDoubleExposureTime();
