@@ -317,6 +317,7 @@ int mask_median255_gain_tune(uint32_t width, uint32_t height, const uint8_t* pIm
 		nextgain = pCamera->SetDoubleGain(nextgain);
 
 		// ƒQƒCƒ“‚àãŒÀ‚È‚çd•û‚È‚¢
+		//cout << "NEXT gain " << nextgain << endl;
 	}
 
 
