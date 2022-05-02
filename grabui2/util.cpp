@@ -247,24 +247,20 @@ int mask_median255_gain_tune(uint32_t width, uint32_t height, const uint8_t* pIm
 	vector<cv::Vec4i> hierarchy;
 	cv::findContours(binImg, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
 	
-	// 最大の輪郭
+	// 既定値以上のエリアをマスクに登録
+	cv::Mat maskImg = cv::Mat::zeros(medianImg.size(), CV_8UC1);
+	double minarea = (double)pCamera->getMinArea();
 	double area = 0.0;
-	int area1st = 0;
 	{
 		int i = 0;
 		for (vector< vector<cv::Point> >::iterator x = contours.begin(); x != contours.end(); ++x) {
 			double a = cv::contourArea(*x);
-			if (area < a) {
-				area = a;
-				area1st = i;
+			if (a >= minarea) {
+				cv::drawContours(maskImg, contours, i, cv::Scalar(255), cv::FILLED);
 			}
 			++i;
 		}
 	}
-
-	// 最大の輪郭でマスクを作る
-	cv::Mat maskImg = cv::Mat::zeros(medianImg.size(), CV_8UC1);
-	cv::drawContours(maskImg, contours, area1st, cv::Scalar(255), cv::FILLED);
 
 #ifdef DEBUG_VIEW
 	pCamera->debugImage.CacheImage(maskImg.cols, maskImg.rows, 1, maskImg.data);

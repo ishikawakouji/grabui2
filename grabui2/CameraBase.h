@@ -35,6 +35,9 @@ public:
 	void setMinArea(int val) {
 		minArea = val;
 	}
+	int getMinArea() {
+		return minArea;
+	}
 	void setPixMinVal(int val) {
 		pixMinVal = val;
 	}
