@@ -178,7 +178,6 @@ int mask_median255_gain_tune(uint32_t width, uint32_t height, const uint8_t* pIm
 			arr[idx++] = pImageBuffer[G + width - 1];
 			arr[idx++] = pImageBuffer[G + width + 1];
 			arr[idx++] = pImageBuffer[G + 2 * width];
-
 			std::sort(arr, arr + idx);
 			if (arr[4] == 255) ++pix;
 			medianImg.data[G] = arr[4];
@@ -267,7 +266,7 @@ int mask_median255_gain_tune(uint32_t width, uint32_t height, const uint8_t* pIm
 	cv::Mat maskImg = cv::Mat::zeros(medianImg.size(), CV_8UC1);
 	cv::drawContours(maskImg, contours, area1st, cv::Scalar(255), cv::FILLED);
 
-#ifdef _DEBUG
+#ifdef DEBUG_VIEW
 	pCamera->debugImage.CacheImage(maskImg.cols, maskImg.rows, 1, maskImg.data);
 #endif
 

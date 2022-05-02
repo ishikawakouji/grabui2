@@ -151,7 +151,7 @@ void CameraMain::AfterGrabbing(const Pylon::CGrabResultPtr& ptrGrabResult)
 
 		// 255í≤êÆ
 		int old255 = count_median255(w, h, pImage);
-		int now255 = mask_count_median255(w, h, pImage);
+		int now255 = mask_median255_gain_tune(w, h, pImage, this); //mask_count_median255(w, h, pImage);
 		setCount255(now255);
 
 		// ï€ë∂

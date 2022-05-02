@@ -512,7 +512,7 @@ int main(int, char**)
                 }
             }
             //ImGui::End();
-#ifdef _DEBUG
+#ifdef DEBUG_VIEW
             for (int i = 0; i < cameraArrNum; ++i) {
                 cameraArr[i]->DrawDebugImage();
             }

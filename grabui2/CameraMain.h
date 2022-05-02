@@ -44,7 +44,7 @@ public:
 	// 撮影後の処理
 	void AfterGrabbing(const Pylon::CGrabResultPtr& ptrGrabResult);
 
-#ifdef _DEBUG
+#ifdef DEBUG_VIEW
 public:
 	// デバッグ用のimage view
 	BufferedImage debugImage;

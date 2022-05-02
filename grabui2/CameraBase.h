@@ -262,8 +262,8 @@ public:
 		image.imgWrite(saveFileName);
 	}
 
-#ifdef _DEBUG
+#ifdef DEBUG_VIEW
 public:
-	void DrawDebugImage() {}
+	virtual void DrawDebugImage() = 0;
 #endif
 };

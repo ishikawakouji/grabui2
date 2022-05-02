@@ -14,4 +14,9 @@ public:
 	void StartGrabbing();
 
 	void AfterGrabbing(const Pylon::CGrabResultPtr& ptrGrabResult);
+
+#ifdef DEBUG_VIEW
+public:
+	void DrawDebugImage() {}
+#endif
 };
