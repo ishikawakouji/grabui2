@@ -157,7 +157,7 @@ void CameraBase::popupConfig(const char* winname)
 		case GAIN_TYPE::GAIN_INT64:
 			if (ImGui::InputInt("iGain", &iGain, 1, 10, ImGuiInputTextFlags_EnterReturnsTrue))
 			{
-				iGain = SetIntGain(iGain);
+				iGain = (int)SetIntGain(iGain);
 			}
 			break;
 		default:

@@ -66,7 +66,7 @@ public:
     }
 
     void CacheImage(int cols, int rows, int channel, const unsigned char* data) {
-        size_t datalen = (long)cols * (long)rows;
+        size_t datalen = (size_t)cols * (size_t)rows;
 
         // ‚±‚±‚É—ˆ‚é‚Æ‚«‚ÍA‚Ü‚¾”’•‚Å‚æ‚¢
         if (cols != width || rows != height) {

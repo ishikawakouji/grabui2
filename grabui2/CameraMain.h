@@ -6,29 +6,6 @@ class CameraMain : public CameraBase
 private:
 	bool fisMain = true;
 	bool fcanTrigger = true;
-#if 0
-	// ゲインのノードタイプ
-	enum class GAIN_TYPE {
-		GAIN_DOUBLE,
-		GAIN_INT64
-	};
-
-	enum class GAIN_TYPE typeGain;
-
-	// ゲインのノード、double
-	Pylon::CFloatParameter doubleGain;
-	double doubleGainMax = 0.0;
-	double doubleGainMin = 0.0;
-
-	// ゲインのノード、long long (int64_t)
-	Pylon::CIntegerParameter intGain;
-	int64_t intGainMax = 0;
-	int64_t intGainMin = 0;
-
-	// 露出時間のノード
-	Pylon::CFloatParameter doubleExposureTime;
-	bool flagExposureTimeValid = false;
-#endif
 
 	// 255値になったピクセルの個数
 	int pixel255 = 0;
@@ -66,6 +43,21 @@ public:
 
 	// 撮影後の処理
 	void AfterGrabbing(const Pylon::CGrabResultPtr& ptrGrabResult);
+
+#ifdef _DEBUG
+public:
+	// デバッグ用のimage view
+	BufferedImage debugImage;
+	void DrawDebugImage() {
+		string dwinname = string("debug_") + camera.GetDeviceInfo().GetSerialNumber().c_str();
+		ImGui::Begin(dwinname.c_str());
+		{
+			debugImage.DrawImage();
+		}
+		ImGui::End();
+	}
+
+#endif
 };
 
 /**

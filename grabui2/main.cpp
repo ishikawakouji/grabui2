@@ -512,6 +512,11 @@ int main(int, char**)
                 }
             }
             //ImGui::End();
+#ifdef _DEBUG
+            for (int i = 0; i < cameraArrNum; ++i) {
+                cameraArr[i]->DrawDebugImage();
+            }
+#endif
 
             // 保存、ボタンではなくショートカット
             if (ImGui::IsKeyReleased(ImGui::GetKeyIndex(ImGuiKey_Space)) // space key

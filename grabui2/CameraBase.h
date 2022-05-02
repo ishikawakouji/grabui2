@@ -261,4 +261,9 @@ public:
 	{
 		image.imgWrite(saveFileName);
 	}
+
+#ifdef _DEBUG
+public:
+	void DrawDebugImage() {}
+#endif
 };

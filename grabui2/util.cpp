@@ -1,6 +1,7 @@
 #include <Windows.h>
 #include <algorithm>
 #include <opencv2/opencv.hpp>
+
 #include "util.h"
 
 /*
@@ -265,6 +266,10 @@ int mask_median255_gain_tune(uint32_t width, uint32_t height, const uint8_t* pIm
 	// 最大の輪郭でマスクを作る
 	cv::Mat maskImg = cv::Mat::zeros(medianImg.size(), CV_8UC1);
 	cv::drawContours(maskImg, contours, area1st, cv::Scalar(255), cv::FILLED);
+
+#ifdef _DEBUG
+	pCamera->debugImage.CacheImage(maskImg.cols, maskImg.rows, 1, maskImg.data);
+#endif
 
 	// マスク処理
 	cv::Mat resImg = cv::Mat::zeros(medianImg.size(), CV_8UC1);
