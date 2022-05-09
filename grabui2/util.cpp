@@ -318,12 +318,11 @@ int mask_median255_gain_tune(uint32_t width, uint32_t height, const uint8_t* pIm
 
 	// 露出時間が上限ならゲインを変更
 	if (extime == nextextime) {
-		cv::Mat over100 = (resImg >= 100) * 255;
-		int num100 = cv::countNonZero(over100);
+		double minval, maxval;
+		cv::minMaxIdx(resImg, &minval, &maxval);
 
-		double howmuch = num100 > 10000 ? 1.0 : 0.5;
 		double gain = pCamera->GetDoubleGain();
-		double nextgain = gain + 0.5 * howmuch;
+		double nextgain = maxval <= 0.0 ? gain + 2.0 : gain * 255 / maxval;
 		nextgain = pCamera->SetDoubleGain(nextgain);
 
 		// ゲインも上限なら仕方ない
