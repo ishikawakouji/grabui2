@@ -281,11 +281,12 @@ int mask_median255_gain_tune(uint32_t width, uint32_t height, const uint8_t* pIm
 
 	// 255以上があったらゲインを下げる
 	if (num255 > 0) {
-		int minarea = pCamera->getMinArea();
-		double howmuch = (double)(int)(num255 / minarea) * 0.5;
+		//int minarea = pCamera->getMinArea();
+		double howmuch = num255 > 40000 ? 2.0 : 1.0;
+		howmuch = num255 < 10000 ? 0.5 : howmuch;
 
 		double gain = pCamera->GetDoubleGain();
-		double nextgain = gain - (howmuch + 1.0) * 0.5;
+		double nextgain = gain - 0.5 * howmuch;
 		nextgain = pCamera->SetDoubleGain(nextgain);
 		
 		// ゲインは下限
@@ -311,17 +312,18 @@ int mask_median255_gain_tune(uint32_t width, uint32_t height, const uint8_t* pIm
 	}
 
 	// ゲインを下げすぎ
-	double maxval = 255.0;
-	cv::minMaxIdx(resImg, NULL, &maxval);
-
 	double extime = pCamera->GetDoubleExposureTime();
-	double nextextime = extime * (255.0/maxval);
+	double nextextime = extime * 1.1;
 	nextextime = pCamera->SetDoubleExposureTime(nextextime);
 
 	// 露出時間が上限ならゲインを変更
 	if (extime == nextextime) {
+		cv::Mat over100 = (resImg >= 100) * 255;
+		int num100 = cv::countNonZero(over100);
+
+		double howmuch = num100 > 10000 ? 1.0 : 0.5;
 		double gain = pCamera->GetDoubleGain();
-		double nextgain = gain + (((255.0 - maxval)/255.0)/0.06) * 0.5;
+		double nextgain = gain + 0.5 * howmuch;
 		nextgain = pCamera->SetDoubleGain(nextgain);
 
 		// ゲインも上限なら仕方ない
