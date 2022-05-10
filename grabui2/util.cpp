@@ -298,9 +298,11 @@ int mask_median255_gain_tune(uint32_t width, uint32_t height, const uint8_t* pIm
 	pixminval = 225;
 	cv::Mat over225 = (resImg >= pixminval) * 255;
 	int num225 = cv::countNonZero(over225);
+#if 0
 	int numRes = cv::countNonZero(resImg);
 	int numOrig = cv::countNonZero(medianImg);
 	cout << "-- orig/res/225 pix " << numOrig << "/" << numRes << "/" << num225 << endl;
+#endif
 
 	if ((num255 == 0) && (num225 > 0)) {
 		return num255;

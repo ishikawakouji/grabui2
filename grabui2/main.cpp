@@ -439,6 +439,16 @@ int main(int, char**)
                     cameraArr[i]->setAutoGainTune(!dontAutoGainTune);
                 }
 
+                // ゲインの強制変更
+                ImGui::SameLine();
+                static double pushGain = 0.0;
+                if (ImGui::InputDouble(u8"ゲイン強制", &pushGain, 0.0, 0.0, "%.1f", ImGuiInputTextFlags_EnterReturnsTrue)) {
+                    // 全てのカメラに伝える
+                    for (int i = 0; i < cameraArrNum; ++i) {
+                        double gain = cameraArr[i]->SetDoubleGain(pushGain);
+                    }
+                }
+
                 // このウィンドウの高さを持つ
                 infoh = ImGui::GetWindowHeight();
             }

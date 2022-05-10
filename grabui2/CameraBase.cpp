@@ -183,6 +183,9 @@ void CameraBase::popupConfig(const char* winname)
 				break;
 			}
 #endif
+			// 次にオープンするときは設定値を読み込む
+			init = true;
+
 			ImGui::CloseCurrentPopup();
 		}
 #if 0

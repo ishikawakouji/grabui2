@@ -26,7 +26,7 @@ public:
 
 	virtual void OnImageGrabbed(Pylon::CInstantCamera& camera, const Pylon::CGrabResultPtr& ptrGrabResult)
 	{
-		std::cout << "OnImageGrabbed event for device " << camera.GetDeviceInfo().GetModelName() << std::endl;
+		//std::cout << "OnImageGrabbed event for device " << camera.GetDeviceInfo().GetModelName() << std::endl;
 
 		// ƒJƒƒ‰‚É‚Ü‚©‚¹‚é
 		pCamera->AfterGrabbing(ptrGrabResult);

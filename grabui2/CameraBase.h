@@ -262,6 +262,7 @@ public:
 		return val;
 	}
 	double SetDoubleGain(double val) {
+		if (typeGain != GAIN_TYPE::GAIN_DOUBLE) return 0.0;
 		if (val < doubleGainMin) val = doubleGainMin;
 		if (val > doubleGainMax) val = doubleGainMax;
 
