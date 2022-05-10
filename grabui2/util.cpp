@@ -151,6 +151,10 @@ int count_median255(uint32_t width, uint32_t height, const uint8_t* pImageBuffer
 // 中央値で、既定の大きさ以上の塊の中の最大値が225-254に収まるように制御
 int mask_median255_gain_tune(uint32_t width, uint32_t height, const uint8_t* pImageBuffer, CameraMain* pCamera)
 {
+	// ゲイン処理の間隔
+#define GTUNE_SKIP_COUNT 3
+	static int gtuneCounter = GTUNE_SKIP_COUNT;
+
 	// 画面全体の255オーバー画素数
 	int pix = 0;
 
@@ -240,13 +244,13 @@ int mask_median255_gain_tune(uint32_t width, uint32_t height, const uint8_t* pIm
 
 	// 二値化
 	cv::Mat binImg = cv::Mat::zeros(medianImg.size(), CV_8UC1);
-	cv::threshold(medianImg, binImg, 200.0, 255.0, cv::THRESH_BINARY);
+	cv::threshold(medianImg, binImg, 110.0, 255.0, cv::THRESH_BINARY);
 
 	// 塊抽出
 	vector< vector<cv::Point> > contours;
 	vector<cv::Vec4i> hierarchy;
 	cv::findContours(binImg, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
-	
+
 	// 既定値以上のエリアをマスクに登録
 	cv::Mat maskImg = cv::Mat::zeros(medianImg.size(), CV_8UC1);
 	double minarea = (double)pCamera->getMinArea();
@@ -278,6 +282,76 @@ int mask_median255_gain_tune(uint32_t width, uint32_t height, const uint8_t* pIm
 	if (!pCamera->doAutoGainTune()) {
 		return num255;
 	}
+
+	// ゲイン調整はときどき
+	if (gtuneCounter > 0) {
+		--gtuneCounter;
+		return num255;
+	}
+	else {
+		gtuneCounter = GTUNE_SKIP_COUNT;
+	}
+
+	/*川村さんの調整*/
+	// 既定の中に入っているか
+	int pixminval = pCamera->getPixMinVal();
+	pixminval = 225;
+	cv::Mat over225 = (resImg >= pixminval) * 255;
+	int num225 = cv::countNonZero(over225);
+	int numRes = cv::countNonZero(resImg);
+	int numOrig = cv::countNonZero(medianImg);
+	cout << "-- orig/res/225 pix " << numOrig << "/" << numRes << "/" << num225 << endl;
+
+	if ((num255 == 0) && (num225 > 0)) {
+		return num255;
+	}
+
+	// 画素の最大最小目標値
+	double maxPixLimit = 254.0;
+	double minPixLimit = 225.0;
+
+	double gainNow = pCamera->GetDoubleGain();
+	double gainNext = gainNow;
+
+	// 画素の最大値
+	double maxPix;
+	cv::minMaxIdx(resImg, NULL, &maxPix);
+	if (maxPix < 0.1) {
+		double maxOrigPix;
+		cv::minMaxIdx(medianImg, NULL, &maxOrigPix);
+		cout << "--- max pix orig/arae " << maxOrigPix << "/" << maxPix << endl;
+		maxPix = maxOrigPix;
+	}
+	else {
+		cout << "--- max pix in area = " << maxPix << endl;
+	}
+
+	if (num255 > 0) {
+		gainNext -= 3.0;
+	}
+	if (maxPix < 100.0) {
+		gainNext += 3.0;
+	}
+	else if (maxPix < minPixLimit || maxPix > maxPixLimit) {
+		gainNext += log((maxPixLimit + minPixLimit) * 0.5 / maxPix) / log(2.0) * 6.0;
+	}
+
+	// 変動を 3.0 以内に
+	if (gainNext > gainNow + 3.0) {
+		gainNext = gainNow + 3.0;
+	}
+	if (gainNext < gainNow - 3.0) {
+		gainNext = gainNow - 3.0;
+	}
+
+	// 変動が 0.05 以内なら変えない
+	if ((gainNext > gainNow + 0.05) || (gainNext < gainNow - 0.05)) {
+		gainNext = pCamera->SetDoubleGain(gainNext);
+	}
+	cout << "- debug gain now/next " << gainNow << "/" << gainNext << endl;
+
+#if 0
+
 
 	// 255以上があったらゲインを下げる
 	if (num255 > 0) {
@@ -328,7 +402,7 @@ int mask_median255_gain_tune(uint32_t width, uint32_t height, const uint8_t* pIm
 		// ゲインも上限なら仕方ない
 		//cout << "NEXT gain " << nextgain << endl;
 	}
-
+#endif
 
 	return num255;
 }

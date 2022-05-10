@@ -526,8 +526,8 @@ int main(int, char**)
 #endif
 
             // 保存、ボタンではなくショートカット
-            if (ImGui::IsKeyReleased(ImGui::GetKeyIndex(ImGuiKey_Space)) // space key
-                || ImGui::IsMouseReleased(ImGuiMouseButton_Right)) // mouse right button
+            if (ImGui::IsKeyReleased(ImGui::GetKeyIndex(ImGuiKey_Space))) // space key
+                //|| ImGui::IsMouseReleased(ImGuiMouseButton_Right)) // mouse right button
             {
                 runSave = true;
 
