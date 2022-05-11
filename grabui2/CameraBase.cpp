@@ -9,12 +9,13 @@ void CameraBase::setNode()
 	doubleExposureTime.Attach(camera.GetNodeMap().GetNode("ExposureTime"));
 	flagExposureTimeValid = doubleExposureTime.IsValid();
 	if (flagExposureTimeValid) {
-		exposureTimeCache = doubleExposureTime.GetValue();
+		typeExposureTime = EXPOSURE_TYPE::EX_DOUBLE;
 	}
 	else {
-		exposureTimeCache = 1000.0;
+		typeExposureTime = EXPOSURE_TYPE::EX_RAW;
+		intExposureTime.Attach(camera.GetNodeMap().GetNode("ExposureTimeRaw"));
 	}
-
+	
 	// ゲインノード取得
 	if (camera.GetSfncVersion() >= Pylon::Sfnc_2_0_0)
 	{
@@ -102,31 +103,26 @@ string CameraBase::getCount255String()
 void CameraBase::popupConfig(const char* winname)
 {
 	ImGui::SetNextWindowSize(ImVec2(0.0, 0.0));
-	if (ImGui::BeginPopupModal(winname))
+	if (ImGui::BeginPopupModal(popupWinName.c_str()))
 	{
-		static double dGain;
-		static int iGain;
+		double dGain;
+		int iGain;
 
-		static double exposureTime;
+		double exposureTime;
 
-		static bool init = true;
+		exposureTime = GetDoubleExposureTime();
 
-		if (init) {
-			exposureTime = GetDoubleExposureTime();
-
-			switch (typeGain)
-			{
-			case GAIN_TYPE::GAIN_DOUBLE:
-				dGain = GetDoubleGain();
-				break;
-			case GAIN_TYPE::GAIN_INT64:
-				iGain = (int)GetIntGain();
-				break;
-			default:
-				iGain = 0;
-				break;
-			}
-			init = false;
+		switch (typeGain)
+		{
+		case GAIN_TYPE::GAIN_DOUBLE:
+			dGain = GetDoubleGain();
+			break;
+		case GAIN_TYPE::GAIN_INT64:
+			iGain = (int)GetIntGain();
+			break;
+		default:
+			iGain = 0;
+			break;
 		}
 
 		// 露出時間調整
@@ -183,9 +179,6 @@ void CameraBase::popupConfig(const char* winname)
 				break;
 			}
 #endif
-			// 次にオープンするときは設定値を読み込む
-			init = true;
-
 			ImGui::CloseCurrentPopup();
 		}
 #if 0

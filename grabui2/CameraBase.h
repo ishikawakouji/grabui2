@@ -139,11 +139,21 @@ protected:
 	// イメージバッファ
 	BufferedImage image;
 
+	// カメラ設定popup の名前
+	string popupWinName;
+
 protected:
 	// 露出時間のノード
+	enum class EXPOSURE_TYPE {
+		EX_DOUBLE,
+		EX_RAW
+	};
+	enum class EXPOSURE_TYPE typeExposureTime;
+
 	Pylon::CFloatParameter doubleExposureTime;
 	bool flagExposureTimeValid;
-	double exposureTimeCache = 0.0;
+	//double exposureTimeCache = 0.0;
+	Pylon::CIntegerParameter intExposureTime;
 
 	// ゲインのノードタイプ
 	enum class GAIN_TYPE {
@@ -188,6 +198,11 @@ public:
 public:
 	// デバイスをアタッチ
 	virtual void AttachDevice(IPylonDevice* device) = 0;
+
+	// popup名
+	string getPopupWinName() {
+		return popupWinName;
+	}
 
 	// リアルカメラ
 	void setPhysicalCamera() {
@@ -285,9 +300,11 @@ public:
 	// 露出時間
 	double GetDoubleExposureTime() {
 		if (flagExposureTimeValid) {
-			return exposureTimeCache;
+			return doubleExposureTime.GetValue();
 		}
-		return 1000.0;
+		else {
+			return (double)intExposureTime.GetValue();
+		}
 	}
 	double SetDoubleExposureTime(double val) {
 		if (val < minExTime) val = minExTime;
@@ -296,11 +313,15 @@ public:
 		if (isOpen()) {
 			if (flagExposureTimeValid) {
 				doubleExposureTime.SetValue(val);
-				exposureTimeCache = val;
+				val = doubleExposureTime.GetValue();
+			}
+			else {
+				intExposureTime.SetValue((int64_t)val);
+				val = (double)intExposureTime.GetValue();
 			}
 		}
 		else {
-			val = exposureTimeCache;
+			val = 1000.0;
 		}
 		return val;
 	}

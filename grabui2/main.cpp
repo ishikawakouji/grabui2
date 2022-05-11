@@ -402,10 +402,10 @@ int main(int, char**)
                     {
                         ImGui::TableNextColumn();
                         if (ImGui::Button(cameraWinName[i].c_str())) {
-                            ImGui::OpenPopup((cameraWinName[i] + "_gain").c_str());
+                            ImGui::OpenPopup(cameraArr[i]->getPopupWinName().c_str());
                         };
-                        cameraArr[i]->popupConfig((cameraWinName[i] + "_gain").c_str());
-                        
+                        cameraArr[i]->popupConfig(cameraArr[i]->getPopupWinName().c_str());
+
                         ImGui::TableNextColumn();
                         ImGui::Text(devices[i].GetSerialNumber().c_str());
                         

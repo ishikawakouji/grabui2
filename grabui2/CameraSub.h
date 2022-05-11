@@ -17,6 +17,10 @@ public:
 		setConfig();
 
 		Init();
+
+		// デバイス名取得してpopup名を決める
+		string devsn = camera.GetDeviceInfo().GetSerialNumber().c_str();
+		popupWinName = devsn + "_config";
 	}
 
 };
