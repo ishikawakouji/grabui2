@@ -27,6 +27,9 @@ private:
     // イメージのバッファ
     unsigned char* localbuf = NULL;
 
+    // 保存バッファ
+    unsigned char* savebuf = NULL;
+
     // イメージの位置と拡大率
     ImVec2 imagePos;
     float imageScale = 1.0f;
@@ -39,6 +42,7 @@ public:
     int getWidth() { return width; }
     int getHeight() { return height; }
     unsigned char* getImageDataPtr() { return localbuf; }
+    unsigned char* getSaveImageDataPtr() { return savebuf; }
     char* getFileName() { return saveFileName; }
     void setColorCamera() {
         imgCh = 3;
@@ -65,6 +69,7 @@ public:
         free(localbuf);
     }
 
+    // 描画用にキャッシュする
     void CacheImage(int cols, int rows, int channel, const unsigned char* data) {
         size_t datalen = (size_t)cols * (size_t)rows;
 
@@ -79,6 +84,17 @@ public:
         }
         memcpy_s(localbuf, datalen, data, datalen);
         enable = true;
+    }
+
+    // 保存用にキャッシュする
+    void PushImageToSaveBuffer() {
+        // サイズは localbufとおなじはず
+        size_t datalen = width * height;
+
+        if (savebuf == NULL) {
+            savebuf = (unsigned char*)malloc(datalen);
+        }
+        memcpy_s(savebuf, datalen, localbuf, datalen);
     }
 
     // 描画

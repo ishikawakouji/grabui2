@@ -166,7 +166,7 @@ void BufferedImage::DrawImage() {
 void threadSave(BufferedImage* pBuffer)
 {
 
-    cv::Mat image(pBuffer->getHeight(), pBuffer->getWidth(), CV_8UC1, pBuffer->getImageDataPtr());
+    cv::Mat image(pBuffer->getHeight(), pBuffer->getWidth(), CV_8UC1, pBuffer->getSaveImageDataPtr());
     cv::imwrite(pBuffer->getFileName(), image);
 
     //Beep(500, 500);
@@ -175,6 +175,7 @@ void threadSave(BufferedImage* pBuffer)
 
 void BufferedImage::imgWrite(const char* filename)
 {
+    PushImageToSaveBuffer();
     memcpy_s(saveFileName, FILE_NAME_LEN, filename, FILE_NAME_LEN);
 
     std::thread th(threadSave, this);
