@@ -5,6 +5,7 @@ Dear ImGuiとbasler Pylonを利用
 
 vcpkgで必要なモノをインストールしている
 
+```
 egl-registry:x64-windows                           2021-11-23       the EGL API and Extension Registry
 freeglut:x64-windows                               3.2.2            Open source implementation of GLUT with source a...
 giflib:x64-windows                                 5.2.1#2          A library for reading and writing gif images.
@@ -33,3 +34,4 @@ vcpkg-cmake-config:x64-windows                     2022-02-06#1
 vcpkg-cmake:x64-windows                            2022-07-18       
 vcpkg-get-python-packages:x64-windows              2022-06-30       
 zlib:x64-windows                                   1.2.12#1         A compression library
+```
